@@ -1,0 +1,117 @@
+{
+  "report_type": "周报",
+  "period": {
+    "start_date": "2026-01-26",
+    "end_date": "2026-02-01"
+  },
+  "statistics": {
+    "total_commits": 28,
+    "total_tasks": 6,
+    "completed": 2,
+    "testing": 4,
+    "pending_test": 0
+  },
+  "plans": [
+    "推进数金蜂系统新功能模块的集成测试，确保规则配置等业务流程稳定运行。",
+    "持续跟进生产环境部署验证，监控网络配置优化的实际效果。",
+    "响应测试反馈，修复潜在的UI交互缺陷，提升用户体验。"
+  ],
+  "tasks": [
+    {
+      "content": "【数金蜂系统后端】优化开发环境配置与容器编排，更新XXL-JOB管理端资源，提升系统可维护性。",
+      "completion_standard": "完成开发并提交",
+      "status": "已完成",
+      "notes": "",
+      "project_name": "数金蜂系统后端"
+    },
+    {
+      "content": "【数金蜂系统后端】迭代系统基础配置，调整application-dev.yml及Docker服务定义以适配最新部署架构。",
+      "completion_standard": "完成开发并提交",
+      "status": "已完成",
+      "notes": "",
+      "project_name": "数金蜂系统后端"
+    },
+    {
+      "content": "【数金蜂系统前端】新增客户库及录入规则配置页面，完善业务规则管理功能。",
+      "completion_standard": "完成功能开发",
+      "status": "测试中",
+      "notes": "",
+      "project_name": "数金蜂系统前端"
+    },
+    {
+      "content": "【数金蜂系统前端】重构网络层配置，实现Vite动态代理与Nginx路由转发，优化生产环境构建产物。",
+      "completion_standard": "完成配置优化",
+      "status": "测试中",
+      "notes": "",
+      "project_name": "数金蜂系统前端"
+    },
+    {
+      "content": "【数金蜂系统前端】优化核心数据加载逻辑，包括城市数据预取与租户地址映射，提升页面渲染性能。",
+      "completion_standard": "代码完成合并",
+      "status": "测试中",
+      "notes": "",
+      "project_name": "数金蜂系统前端"
+    },
+    {
+      "content": "【数金蜂系统前端】完善项目基础设施，更新部署文档及环境变量配置，确保多环境交付一致性。",
+      "completion_standard": "文档已更新",
+      "status": "测试中",
+      "notes": "",
+      "project_name": "数金蜂系统前端"
+    }
+  ],
+  "projects": [
+    {
+      "project_name": "数金蜂系统后端",
+      "tasks": [
+        {
+          "content": "【数金蜂系统后端】优化开发环境配置与容器编排，更新XXL-JOB管理端资源，提升系统可维护性。",
+          "completion_standard": "完成开发并提交",
+          "status": "已完成",
+          "notes": "",
+          "project_name": "数金蜂系统后端"
+        },
+        {
+          "content": "【数金蜂系统后端】迭代系统基础配置，调整application-dev.yml及Docker服务定义以适配最新部署架构。",
+          "completion_standard": "完成开发并提交",
+          "status": "已完成",
+          "notes": "",
+          "project_name": "数金蜂系统后端"
+        }
+      ]
+    },
+    {
+      "project_name": "数金蜂系统前端",
+      "tasks": [
+        {
+          "content": "【数金蜂系统前端】新增客户库及录入规则配置页面，完善业务规则管理功能。",
+          "completion_standard": "完成功能开发",
+          "status": "测试中",
+          "notes": "",
+          "project_name": "数金蜂系统前端"
+        },
+        {
+          "content": "【数金蜂系统前端】重构网络层配置，实现Vite动态代理与Nginx路由转发，优化生产环境构建产物。",
+          "completion_standard": "完成配置优化",
+          "status": "测试中",
+          "notes": "",
+          "project_name": "数金蜂系统前端"
+        },
+        {
+          "content": "【数金蜂系统前端】优化核心数据加载逻辑，包括城市数据预取与租户地址映射，提升页面渲染性能。",
+          "completion_standard": "代码完成合并",
+          "status": "测试中",
+          "notes": "",
+          "project_name": "数金蜂系统前端"
+        },
+        {
+          "content": "【数金蜂系统前端】完善项目基础设施，更新部署文档及环境变量配置，确保多环境交付一致性。",
+          "completion_standard": "文档已更新",
+          "status": "测试中",
+          "notes": "",
+          "project_name": "数金蜂系统前端"
+        }
+      ]
+    }
+  ]
+}
