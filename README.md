@@ -9,13 +9,13 @@
 安装全部技能：
 
 ```bash
-pnpx skills add <你的仓库> --skill='*'
+pnpx skills add leesama/skills --skill='*'
 ```
 
 安装单个技能（示例：`weekly-report`）：
 
 ```bash
-pnpx skills add <你的仓库> --skill=weekly-report
+pnpx skills add leesama/skills --skill=weekly-report
 ```
 
 ## 技能列表

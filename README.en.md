@@ -9,13 +9,13 @@ This is a skills collection repository. All skills live under `skills/`, and you
 Install all skills:
 
 ```bash
-pnpx skills add <your-repo> --skill='*'
+pnpx skills add leesama/skills --skill='*'
 ```
 
 Install a single skill (example: `weekly-report`):
 
 ```bash
-pnpx skills add <your-repo> --skill=weekly-report
+pnpx skills add leesama/skills --skill=weekly-report
 ```
 
 ## Skills
