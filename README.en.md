@@ -64,3 +64,22 @@ Report project names are resolved in this order:
 1. First line title in `README.md` (with leading `#` removed)
 2. `package.json` field `name`
 3. Repository folder name
+
+## How It Works
+
+1. Config load & init  
+   - Looks for config in a fixed order  
+   - If missing, generates a default config and exits with `CONFIG_INIT_REQUIRED`
+2. Repo discovery & filtering  
+   - Scans `.git` repositories from `repo_paths` or `repo_roots`  
+   - Filters by `company_git_patterns`
+3. Commit collection  
+   - Uses `git log --all --since --until --no-merges`  
+   - Supports `author` filtering
+4. Task aggregation  
+   - Cleans common prefixes and deduplicates  
+   - Sets all task status to "Completed"
+5. Output  
+   - Generates JSON (defaults to Desktop)  
+   - Polishes JSON via `resources/prompt.txt`  
+   - Renders Word if needed

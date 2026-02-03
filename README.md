@@ -88,3 +88,22 @@ node scripts/weekly_render.js -i <优化后的JSON> -o <输出文件>.docx
 1. 仓库根目录的 `README.md` 第一行标题（去掉 `#`）
 2. `package.json` 的 `name` 字段
 3. 仓库目录名
+
+## 工具原理
+
+1. 配置加载与初始化  
+   - 启动时按固定顺序寻找配置文件  
+   - 若未找到则自动生成默认配置并输出 `CONFIG_INIT_REQUIRED`，立即退出
+2. 仓库发现与筛选  
+   - 根据 `repo_paths` 或 `repo_roots` 扫描 `.git` 仓库  
+   - 可按 `company_git_patterns` 过滤远程地址
+3. 提交采集  
+   - 使用 `git log --all --since --until --no-merges` 拉取指定区间提交  
+   - 支持按 `author` 过滤
+4. 任务归并与结构化  
+   - 清理常见前缀并做去重归并  
+   - 统一任务状态为“已完成”
+5. 输出结果  
+   - 生成 JSON（默认输出到桌面）  
+   - 根据 `resources/prompt.txt` 中文化润色生成最终 JSON  
+   - 可渲染为 Word
