@@ -32,7 +32,7 @@ function createCell(text, alignment, columnSpan) {
         children: [textParagraph(text, alignment)],
     });
 }
-function createCombinedTaskTable(thisTasks, nextTasks, periodType) {
+function createCombinedTaskTable(thisTasks, periodType) {
     const rows = [];
     rows.push(new docx_1.TableRow({
         children: [createCell(`本${periodType}任务`, docx_1.AlignmentType.CENTER, 4)],
@@ -47,23 +47,6 @@ function createCombinedTaskTable(thisTasks, nextTasks, periodType) {
     }));
     for (const task of thisTasks) {
         const data = task.length >= 4 ? task.slice(0, 4) : [...task, "", "", ""].slice(0, 4);
-        rows.push(new docx_1.TableRow({
-            children: data.map((item) => createCell(item, docx_1.AlignmentType.LEFT)),
-        }));
-    }
-    rows.push(new docx_1.TableRow({
-        children: [createCell(`下${periodType}任务`, docx_1.AlignmentType.CENTER, 4)],
-    }));
-    rows.push(new docx_1.TableRow({
-        children: [
-            createCell("任务内容", docx_1.AlignmentType.CENTER),
-            createCell("完成标准", docx_1.AlignmentType.CENTER),
-            createCell("备注", docx_1.AlignmentType.CENTER),
-            createCell("", docx_1.AlignmentType.CENTER),
-        ],
-    }));
-    for (const task of nextTasks) {
-        const data = [...task, "", "", ""].slice(0, 4);
         rows.push(new docx_1.TableRow({
             children: data.map((item) => createCell(item, docx_1.AlignmentType.LEFT)),
         }));
@@ -85,7 +68,6 @@ async function renderWord(data, outputFile) {
         t.status ?? "",
         t.notes ?? "",
     ]);
-    const nextTasks = data.next_tasks ?? [["", "", ""]];
     const doc = new docx_1.Document({
         sections: [
             {
@@ -96,7 +78,7 @@ async function renderWord(data, outputFile) {
                     }),
                     textParagraph(`统计时间：${startDate} 至 ${endDate}`),
                     textParagraph(`本${periodType}提交总数：${totalCommits} 条`),
-                    createCombinedTaskTable(thisTasks, nextTasks, periodType),
+                    createCombinedTaskTable(thisTasks, periodType),
                 ],
             },
         ],
