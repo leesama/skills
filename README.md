@@ -1,5 +1,7 @@
 # Skills 工具集
 
+中文 | [English](README.en.md)
+
 这是一个 skills 合集仓库，所有技能都放在 `skills/` 目录下，可通过 `pnpx` 直接安装全部或单个技能。
 
 ## 安装
@@ -54,3 +56,27 @@ node scripts/weekly_render.js -i <优化后的JSON> -o <输出文件>.docx
 ## 说明
 
 - 各技能的详细使用方式见对应目录下的 `SKILL.md`。
+
+## 配置文件生成逻辑
+
+启动时按以下顺序查找配置（找到第一个就用）：
+
+1. 环境变量 `WEEKLY_REPORT_CONFIG` 指定的文件
+2. 当前目录 `weekly.config.json`
+3. `~/.config/weekly-report/config.json`
+4. `~/.weekly-report.json`
+
+如果都没找到，会自动生成默认配置到 `~/.config/weekly-report/config.json`，输出 `CONFIG_INIT_REQUIRED` 并立即退出。  
+如果设置了 `WEEKLY_REPORT_CONFIG` 但文件不存在，会在该路径生成默认配置并同样退出。
+
+## 配置项说明
+
+- `author`：作者过滤。可填姓名或邮箱，支持逗号分隔或数组。为空则使用 git 配置里的 `user.name`/`user.email`。
+- `stat_mode`：`week` 或 `month`，按周/按月统计。
+- `week_start`：周起始日（0=周一，1=周二，依此类推）。
+- `week_offset`：向前偏移多少周（0=本周，1=上周）。
+- `month_offset`：向前偏移多少月（0=本月，1=上月）。
+- `repo_roots`：仓库扫描根目录数组（会向下递归搜索 `.git`）。
+- `company_git_patterns`：只统计 remote URL 含这些关键词的仓库（为空则不过滤）。
+- `repo_paths`：直接指定仓库路径列表（非空时优先使用它）。
+- `max_scan_depth`：扫描 `repo_roots` 时最大递归深度。
