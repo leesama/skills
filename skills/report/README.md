@@ -22,8 +22,10 @@ npm run build
 生成原始 JSON：
 
 ```bash
-node scripts/weekly.js
+node scripts/weekly.js --stat-mode day|week|month
 ```
+
+也支持中文：`日报` / `周报` / `月报`。
 
 默认输出到桌面（`~/Desktop`），若不存在则输出到当前目录。
 

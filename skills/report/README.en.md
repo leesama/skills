@@ -22,8 +22,10 @@ npm run build
 Generate raw JSON:
 
 ```bash
-node scripts/weekly.js
+node scripts/weekly.js --stat-mode day|week|month
 ```
+
+Chinese aliases are also supported: `日报` / `周报` / `月报`.
 
 Default output is the Desktop (`~/Desktop`). If the Desktop does not exist, it falls back to the current directory.
 

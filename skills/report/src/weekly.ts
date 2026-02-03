@@ -119,11 +119,7 @@ function applyConfig(config: Config) {
 
   if (config.author !== undefined) AUTHOR = config.author;
   if (config.stat_mode !== undefined) {
-    const raw = String(config.stat_mode ?? STAT_MODE).trim().toLowerCase();
-    if (raw === "daily" || raw === "day" || raw === "日" || raw === "日报") STAT_MODE = "day";
-    else if (raw === "weekly" || raw === "week" || raw === "周" || raw === "周报") STAT_MODE = "week";
-    else if (raw === "monthly" || raw === "month" || raw === "月" || raw === "月报") STAT_MODE = "month";
-    else if (raw) STAT_MODE = raw;
+    STAT_MODE = normalizeStatMode(String(config.stat_mode ?? ""), STAT_MODE);
   }
   if (config.week_start !== undefined) WEEK_START = maybeInt(config.week_start, WEEK_START);
   if (config.week_offset !== undefined) WEEK_OFFSET = maybeInt(config.week_offset, WEEK_OFFSET);
@@ -133,6 +129,29 @@ function applyConfig(config: Config) {
   if (config.company_git_patterns !== undefined) COMPANY_GIT_PATTERNS = normalizeList(config.company_git_patterns);
   if (config.repo_paths !== undefined) REPO_PATHS = normalizeList(config.repo_paths);
   if (config.max_scan_depth !== undefined) MAX_SCAN_DEPTH = maybeInt(config.max_scan_depth, MAX_SCAN_DEPTH);
+}
+
+function normalizeStatMode(value: string, fallback: string): string {
+  const raw = String(value ?? "").trim().toLowerCase();
+  if (!raw) return fallback;
+  if (raw === "daily" || raw === "day" || raw === "日" || raw === "日报") return "day";
+  if (raw === "weekly" || raw === "week" || raw === "周" || raw === "周报") return "week";
+  if (raw === "monthly" || raw === "month" || raw === "月" || raw === "月报") return "month";
+  return raw;
+}
+
+function parseArgs(argv: string[]): { statMode: string } {
+  const args = { statMode: "" };
+  for (let i = 0; i < argv.length; i += 1) {
+    const current = argv[i];
+    if (current === "-m" || current === "--stat-mode") {
+      args.statMode = argv[i + 1] ?? "";
+      i += 1;
+    } else if (current.startsWith("--stat-mode=")) {
+      args.statMode = current.slice("--stat-mode=".length);
+    }
+  }
+  return args;
 }
 
 function defaultRepoRoots(): string[] {
@@ -668,6 +687,11 @@ function main() {
   }
   if (Object.keys(config).length > 0) applyConfig(config);
   if (configPath) console.log(`🔧 已加载配置：${configPath}`);
+
+  const cli = parseArgs(process.argv.slice(2));
+  if (cli.statMode) {
+    STAT_MODE = normalizeStatMode(cli.statMode, STAT_MODE);
+  }
 
   const repoPaths = getRepoPaths();
   if (repoPaths.length === 0) {

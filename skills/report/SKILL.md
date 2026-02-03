@@ -26,44 +26,34 @@ description: 生成日报/周报/月报的技能。适用于“生成日报/周�
   - `stat_mode`: `day` / `week` / `month`
   - `day_offset`: 0=今天，1=昨天
 
-## 2) 安装依赖（仅首次）
-
-```bash
-cd <skill_root>
-npm install
-```
-
-## 3) 编译（生成 scripts）
-
-```bash
-npm run build
-```
-
-## 4) 生成原始 JSON
+## 2) 生成原始 JSON
 - 在任意目录执行以下命令（`<skill_root>` 为本 SKILL.md 所在目录）：
 
 ```bash
-node <skill_root>/scripts/weekly.js
+node <skill_root>/scripts/weekly.js --stat-mode day|week|month
 ```
 
-- 输出文件形如：`本周工作周报_YYYY-MM-DD.json`
+- 也支持中文：`日报` / `周报` / `月报`
+
+- 输出文件形如：`本日/本周/本月工作日报/周报/月报_YYYY-MM-DD.json`
 - 输出目录：默认输出到桌面（`~/Desktop`），若不存在则输出到当前目录
 - 不要覆盖或修改原始 JSON
 
-## 5) 生成优化版 JSON（必做）
-- 使用 `resources/prompt.txt` 对原始 JSON 进行周报化与中文化
+## 3) 生成优化版 JSON（必做）
+- 使用 `resources/prompt.txt` 对原始 JSON 进行报告化与中文化
 - 必须将 commit message 转为中文并润色为适合给老板汇报的表达
-- 输出新文件，例如：`本周工作周报_ai.json`
+- 输出新文件，例如：`本日/本周/本月工作日报/周报/月报_ai.json`
 
-## 6) 渲染 Word
+## 4) 渲染 Word
 
 ```bash
 node <skill_root>/scripts/weekly_render.js -i <优化后的JSON> -o <输出文件>.docx
 ```
-## 7) 回复结果
+## 5) 回复结果
 - 返回最终 Word 文件的完整路径
 - 若仅输出 JSON，也返回 JSON 文件路径
 
 # 注意事项
 - 若未找到仓库，优先配置 `repo_paths` 或 `repo_roots`
 - 如需多仓库统计，建议设置 `repo_roots` 并结合 `company_git_patterns` 过滤
+- 依赖安装与编译请参考 `skills/report/README.md`
