@@ -56,3 +56,11 @@ On first run, if no config is found, a default config will be generated at `~/.c
 ## Notes
 
 - See each skill's `SKILL.md` for details.
+
+## Project Name Resolution
+
+Report project names are resolved in this order:
+
+1. First line title in `README.md` (with leading `#` removed)
+2. `package.json` field `name`
+3. Repository folder name

@@ -80,3 +80,11 @@ node scripts/weekly_render.js -i <优化后的JSON> -o <输出文件>.docx
 - `company_git_patterns`：只统计 remote URL 含这些关键词的仓库（为空则不过滤）。
 - `repo_paths`：直接指定仓库路径列表（非空时优先使用它）。
 - `max_scan_depth`：扫描 `repo_roots` 时最大递归深度。
+
+## 项目名获取逻辑
+
+生成报告时，项目名按以下顺序获取：
+
+1. 仓库根目录的 `README.md` 第一行标题（去掉 `#`）
+2. `package.json` 的 `name` 字段
+3. 仓库目录名
