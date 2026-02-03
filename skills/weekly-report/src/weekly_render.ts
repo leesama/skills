@@ -1,4 +1,5 @@
 import fs from "fs";
+import os from "os";
 import path from "path";
 import {
   AlignmentType,
@@ -20,13 +21,14 @@ type ReportData = {
   tasks?: Array<{ content?: string; completion_standard?: string; status?: string; notes?: string }>;
   next_tasks?: string[][];
 };
+type AlignmentValue = (typeof AlignmentType)[keyof typeof AlignmentType];
 
 function periodTypeFromReport(reportType?: string): "周" | "月" {
   if (reportType && reportType.includes("月")) return "月";
   return "周";
 }
 
-function textParagraph(text: string, alignment: AlignmentType = AlignmentType.LEFT) {
+function textParagraph(text: string, alignment: AlignmentValue = AlignmentType.LEFT) {
   return new Paragraph({
     alignment,
     children: [
@@ -39,7 +41,7 @@ function textParagraph(text: string, alignment: AlignmentType = AlignmentType.LE
   });
 }
 
-function createCell(text: string, alignment: AlignmentType, columnSpan?: number) {
+function createCell(text: string, alignment: AlignmentValue, columnSpan?: number) {
   return new TableCell({
     columnSpan,
     children: [textParagraph(text, alignment)],
@@ -139,7 +141,13 @@ async function renderWord(data: ReportData, outputFile?: string) {
     ],
   });
 
-  const file = outputFile || `本${periodType}工作${periodType}报_${endDate}.docx`;
+  let file = outputFile || `本${periodType}工作${periodType}报_${endDate}.docx`;
+  if (!outputFile) {
+    const desktopDir = path.join(os.homedir(), "Desktop");
+    const outputDir =
+      fs.existsSync(desktopDir) && fs.statSync(desktopDir).isDirectory() ? desktopDir : process.cwd();
+    file = path.join(outputDir, file);
+  }
   const buffer = await Packer.toBuffer(doc);
   fs.writeFileSync(file, buffer);
   return file;

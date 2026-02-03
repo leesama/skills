@@ -1,5 +1,5 @@
 {
-  "author": "Alice",
+  "author": ["Alice", "alice@example.com"],
   "stat_mode": "week",
   "week_start": 0,
   "week_offset": 0,

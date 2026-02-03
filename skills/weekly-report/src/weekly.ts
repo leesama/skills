@@ -4,9 +4,10 @@ import os from "os";
 import { spawnSync } from "child_process";
 
 const CONFIG_ENV = "WEEKLY_REPORT_CONFIG";
+const DEFAULT_CONFIG_PATH = path.join(os.homedir(), ".config/weekly-report/config.json");
 
 type Config = {
-  author?: string;
+  author?: string | string[];
   stat_mode?: string;
   week_start?: number;
   week_offset?: number;
@@ -21,7 +22,7 @@ type CommitItem = string;
 
 type TaskRow = [string, string, string, string, string?];
 
-let AUTHOR = "";
+let AUTHOR: string | string[] = "";
 let STAT_MODE = "week";
 let WEEK_START = 0;
 let WEEK_OFFSET = 0;
@@ -50,11 +51,25 @@ function maybeInt(value: unknown, fallback: number): number {
   return Number.isFinite(n) ? Math.trunc(n) : fallback;
 }
 
-function loadConfig(): { config: Config; configPath: string } {
+function buildDefaultConfig(): Config {
+  return {
+    author: "",
+    stat_mode: "week",
+    week_start: 0,
+    week_offset: 0,
+    month_offset: 0,
+    repo_roots: [process.cwd()],
+    company_git_patterns: [],
+    repo_paths: [],
+    max_scan_depth: 4,
+  };
+}
+
+function loadConfig(): { config: Config; configPath: string; generated: boolean } {
   const candidates = [
     process.env[CONFIG_ENV] ?? "",
     path.join(process.cwd(), "weekly.config.json"),
-    path.join(os.homedir(), ".config/weekly-report/config.json"),
+    DEFAULT_CONFIG_PATH,
     path.join(os.homedir(), ".weekly-report.json"),
   ];
 
@@ -65,7 +80,7 @@ function loadConfig(): { config: Config; configPath: string } {
         const raw = fs.readFileSync(candidate, "utf-8");
         const data = JSON.parse(raw);
         if (data && typeof data === "object") {
-          return { config: data, configPath: candidate };
+          return { config: data, configPath: candidate, generated: false };
         }
       }
     } catch {
@@ -73,13 +88,23 @@ function loadConfig(): { config: Config; configPath: string } {
     }
   }
 
-  return { config: {}, configPath: "" };
+  const envPath = (process.env[CONFIG_ENV] ?? "").trim();
+  const targetPath = envPath || DEFAULT_CONFIG_PATH;
+  const config = buildDefaultConfig();
+  try {
+    const dir = path.dirname(targetPath);
+    if (!fs.existsSync(dir)) fs.mkdirSync(dir, { recursive: true });
+    fs.writeFileSync(targetPath, JSON.stringify(config, null, 2), "utf-8");
+    return { config, configPath: targetPath, generated: true };
+  } catch {
+    return { config, configPath: "", generated: true };
+  }
 }
 
 function applyConfig(config: Config) {
   if (!config || typeof config !== "object") return;
 
-  if (config.author !== undefined) AUTHOR = String(config.author ?? "").trim();
+  if (config.author !== undefined) AUTHOR = config.author;
   if (config.stat_mode !== undefined) {
     const mode = String(config.stat_mode ?? STAT_MODE).trim().toLowerCase();
     if (mode) STAT_MODE = mode;
@@ -243,10 +268,35 @@ function escapeRegex(value: string): string {
   return value.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
 }
 
-function resolveAuthorPattern(repoPath: string, author: string): { pattern: string; useExtended: boolean } {
-  if (author && author.trim()) {
-    const pattern = author.trim();
-    return { pattern, useExtended: pattern.includes("|") };
+function resolveAuthorPattern(
+  repoPath: string,
+  author: string | string[] | undefined
+): { pattern: string; useExtended: boolean } {
+  if (Array.isArray(author)) {
+    const list = normalizeList(author);
+    if (list.length > 1) {
+      const escaped = list.map((item) => escapeRegex(item));
+      return { pattern: escaped.join("|"), useExtended: true };
+    }
+    if (list.length === 1) {
+      const pattern = list[0];
+      return { pattern: escapeRegex(pattern), useExtended: false };
+    }
+  } else if (typeof author === "string" && author.trim()) {
+    const raw = author.trim();
+    if (raw.includes(",")) {
+      const list = normalizeList(raw);
+      if (list.length > 1) {
+        const escaped = list.map((item) => escapeRegex(item));
+        return { pattern: escaped.join("|"), useExtended: true };
+      }
+      if (list.length === 1) {
+        const pattern = list[0];
+        return { pattern: escapeRegex(pattern), useExtended: false };
+      }
+    }
+    if (raw.includes("|")) return { pattern: raw, useExtended: true };
+    return { pattern: escapeRegex(raw), useExtended: false };
   }
   const email =
     getGitConfigValue(repoPath, "user.email") ||
@@ -259,30 +309,7 @@ function resolveAuthorPattern(repoPath: string, author: string): { pattern: stri
   return { pattern: "", useExtended: false };
 }
 
-function checkCommitInBranches(repoPath: string, commitHash: string): string {
-  const result = runGit(["-C", repoPath, "branch", "--contains", commitHash]);
-  if (result.status !== 0 || !result.stdout.trim()) return "unknown";
-  const branches = result.stdout
-    .split("\n")
-    .map((b) => b.replace("*", "").trim())
-    .filter(Boolean);
-
-  for (const branch of branches) {
-    if (branch.toLowerCase().includes("release")) return "release";
-  }
-  for (const branch of branches) {
-    if (branch.toLowerCase().startsWith("zsxr")) return "zsxr";
-  }
-  for (const branch of branches) {
-    if (branch.toLowerCase().includes("pre-test")) return "pre-test";
-  }
-  for (const branch of branches) {
-    if (branch.toLowerCase().includes("feature")) return "feature";
-  }
-  return "other";
-}
-
-function getProjectNameFromReadme(repoPath: string): string | null {
+function getProjectNameFromReadme(repoPath: string): string {
   const candidates = ["README.md", "readme.md", "Readme.md"];
   for (const name of candidates) {
     const readmePath = path.join(repoPath, name);
@@ -297,10 +324,25 @@ function getProjectNameFromReadme(repoPath: string): string | null {
       continue;
     }
   }
-  return null;
+  const pkgPath = path.join(repoPath, "package.json");
+  try {
+    if (fs.existsSync(pkgPath) && fs.statSync(pkgPath).isFile()) {
+      const raw = fs.readFileSync(pkgPath, "utf-8");
+      const data = JSON.parse(raw) as { name?: string };
+      if (data?.name && data.name.trim()) return data.name.trim();
+    }
+  } catch {
+    // ignore
+  }
+  return path.basename(repoPath);
 }
 
-function getGitCommits(author: string, repoPaths: string[], startDate: string, endDate: string): CommitItem[] {
+function getGitCommits(
+  author: string | string[],
+  repoPaths: string[],
+  startDate: string,
+  endDate: string
+): CommitItem[] {
   const sinceArg = `${startDate} 00:00:00`;
   const untilArg = `${endDate} 23:59:59`;
   const allCommits: CommitItem[] = [];
@@ -315,32 +357,20 @@ function getGitCommits(author: string, repoPaths: string[], startDate: string, e
         "--all",
         `--since=${sinceArg}`,
         `--until=${untilArg}`,
+        "--no-merges",
         "--pretty=format:%ad | %s | %H",
         "--date=short",
       ];
       if (pattern) {
-        args.splice(6, 0, `--author=${pattern}`);
-        if (useExtended) args.splice(6, 0, "--extended-regexp");
+        if (useExtended) args.push("--extended-regexp");
+        args.push(`--author=${pattern}`);
       }
       const result = runGit(args);
       if (result.status === 0 && result.stdout.trim()) {
-        const projectName = getProjectNameFromReadme(repoPath);
-        if (!projectName) {
-          throw new Error(`仓库 ${repoPath} 本周有提交但未找到 README.md，无法提取项目名！`);
-        }
-
-        const repoName = projectName;
+        const repoName = getProjectNameFromReadme(repoPath);
         const commits = result.stdout.trim().split("\n");
         const filtered: CommitItem[] = [];
         for (const line of commits) {
-          if (
-            line.includes("Merge branch") ||
-            line.includes("Merge pull request") ||
-            line.includes("Merge remote-tracking branch") ||
-            line.toLowerCase().includes("merge")
-          ) {
-            continue;
-          }
           const parts = line.split(" | ");
           if (parts.length >= 3) {
             const date = parts[0];
@@ -350,8 +380,7 @@ function getGitCommits(author: string, repoPaths: string[], startDate: string, e
             if (parentCheck.status === 0) {
               const parents = parentCheck.stdout.trim().split(/\s+/);
               if (parents.length <= 2) {
-                const branchStatus = checkCommitInBranches(repoPath, commitHash);
-                filtered.push(`${date} | ${msg} | [${repoName}] | ${branchStatus}`);
+                filtered.push(`${date} | ${msg} | [${repoName}]`);
               }
             }
           } else if (parts.length >= 2) {
@@ -429,11 +458,6 @@ function analyzeCommitsForStats(commits: CommitItem[]): number {
 }
 
 function getTaskStatusByBranch(branchStatus: string): string {
-  if (!branchStatus || branchStatus === "unknown") return "已完成";
-  if (branchStatus === "pre-test") return "测试中";
-  if (branchStatus === "release") return "已完成";
-  if (branchStatus === "zsxr") return "已完成";
-  if (branchStatus === "feature") return "待测试";
   return "已完成";
 }
 
@@ -574,16 +598,19 @@ function saveTasksToJson(tasks: TaskRow[], startDate: string, endDate: string, t
     tasks: [],
   };
 
-  const grouped: Record<string, any[]> = {};
+  const grouped: Record<
+    string,
+    { content: string; completion_standard: string; status: string; notes: string; project_name: string }[]
+  > = {};
   for (const task of tasks) {
+    const projectName = task[4] ?? "其他项目";
     const item = {
       content: task[0] ?? "",
       completion_standard: task[1] ?? "",
       status: task[2] ?? "",
       notes: task[3] ?? "",
+      project_name: projectName,
     };
-    const projectName = task[4] ?? "其他项目";
-    item.project_name = projectName;
     if (!grouped[projectName]) grouped[projectName] = [];
     grouped[projectName].push(item);
   }
@@ -594,14 +621,26 @@ function saveTasksToJson(tasks: TaskRow[], startDate: string, endDate: string, t
     jsonData.tasks.push(...projectTasks);
   }
 
-  const jsonFile = `本${periodType}工作${periodType}报_${endDate}.json`;
+  const desktopDir = path.join(os.homedir(), "Desktop");
+  const outputDir =
+    fs.existsSync(desktopDir) && fs.statSync(desktopDir).isDirectory() ? desktopDir : process.cwd();
+  const jsonFile = path.join(outputDir, `本${periodType}工作${periodType}报_${endDate}.json`);
   fs.writeFileSync(jsonFile, JSON.stringify(jsonData, null, 2), "utf-8");
   console.log(`✅ JSON数据已生成：${jsonFile}`);
   return jsonData;
 }
 
 function main() {
-  const { config, configPath } = loadConfig();
+  const { config, configPath, generated } = loadConfig();
+  if (generated) {
+    if (configPath) {
+      console.log(`🆕 已生成默认配置：${configPath}`);
+      console.log("请先修改配置后再运行。");
+      process.exit(0);
+    }
+    console.log("⚠️ 未找到配置且无法写入默认配置，请检查权限或设置 WEEKLY_REPORT_CONFIG。");
+    process.exit(1);
+  }
   if (Object.keys(config).length > 0) applyConfig(config);
   if (configPath) console.log(`🔧 已加载配置：${configPath}`);
 

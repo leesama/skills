@@ -29,17 +29,27 @@ cd skills/weekly-report
 npm install
 ```
 
+编译 TypeScript（生成 `scripts/`）：
+
+```bash
+npm run build
+```
+
 生成原始 JSON：
 
 ```bash
 node scripts/weekly.js
 ```
 
+默认输出到桌面（`~/Desktop`），若不存在则输出到当前目录。
+
 渲染 Word：
 
 ```bash
 node scripts/weekly_render.js -i <优化后的JSON> -o <输出文件>.docx
 ```
+
+首次运行若未找到配置，会自动生成默认配置到 `~/.config/weekly-report/config.json`，并提示用户修改后再运行。
 
 ## 说明
 
