@@ -50,8 +50,9 @@ node <skill_root>/scripts/weekly.js --stat-mode day|week|month
 node <skill_root>/scripts/weekly_render.js -i <优化后的JSON> -o <输出文件>.docx
 ```
 ## 5) 回复结果
+- 直接渲染 Word，不要询问用户是否继续
 - 返回最终 Word 文件的完整路径
-- 若仅输出 JSON，也返回 JSON 文件路径
+- 同时返回优化后的 JSON 文件路径
 
 # 注意事项
 - 若未找到仓库，优先配置 `repo_paths` 或 `repo_roots`
