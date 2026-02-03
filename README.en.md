@@ -12,22 +12,22 @@ Install all skills:
 pnpx skills add leesama/skills --skill='*'
 ```
 
-Install a single skill (example: `weekly-report`):
+Install a single skill (example: `report`):
 
 ```bash
-pnpx skills add leesama/skills --skill=weekly-report
+pnpx skills add leesama/skills --skill=report
 ```
 
 ## Skills
 
-- `weekly-report`: Generate weekly/monthly reports, scan multiple repos, aggregate by week/month, output JSON and Word.
+- `report`: Generate daily/weekly/monthly reports, scan multiple repos, aggregate by day/week/month, output JSON and Word.
 
-## Local Usage (weekly-report)
+## Local Usage (report)
 
 Install dependencies:
 
 ```bash
-cd skills/weekly-report
+cd skills/report
 npm install
 ```
 
@@ -45,13 +45,14 @@ node scripts/weekly.js
 
 Default output is the Desktop (`~/Desktop`). If the Desktop does not exist, it falls back to the current directory.
 
-Polish the JSON for reporting (see `skills/weekly-report/resources/prompt.txt`), then render Word:
+Polish the JSON for reporting (see `skills/report/resources/prompt.txt`), then render Word:
 
 ```bash
 node scripts/weekly_render.js -i <optimized-json> -o <output>.docx
 ```
 
-On first run, if no config is found, a default config will be generated at `~/.config/weekly-report/config.json` and the process will exit immediately. If the output includes `CONFIG_INIT_REQUIRED`, update the config and rerun.
+On first run, if no config is found, a default config will be generated at `~/.config/report/config.json` and the process will exit immediately. If the output includes `CONFIG_INIT_REQUIRED`, update the config and rerun.
+Use `REPORT_REPO_ROOTS` to temporarily specify repo root directories (separated by your OS path delimiter).
 
 ## Notes
 

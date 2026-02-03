@@ -3,14 +3,21 @@ import path from "path";
 import os from "os";
 import { spawnSync } from "child_process";
 
-const CONFIG_ENV = "WEEKLY_REPORT_CONFIG";
-const DEFAULT_CONFIG_PATH = path.join(os.homedir(), ".config/weekly-report/config.json");
+const CONFIG_ENV = "REPORT_CONFIG";
+const LEGACY_CONFIG_ENV = "WEEKLY_REPORT_CONFIG";
+const DEFAULT_CONFIG_PATH = path.join(os.homedir(), ".config/report/config.json");
+const LEGACY_CONFIG_PATH = path.join(os.homedir(), ".config/weekly-report/config.json");
+const DEFAULT_CONFIG_FILE = path.join(os.homedir(), ".report.json");
+const LEGACY_CONFIG_FILE = path.join(os.homedir(), ".weekly-report.json");
+const REPORT_REPO_ROOTS_ENV = "REPORT_REPO_ROOTS";
+const LEGACY_REPO_ROOTS_ENV = "WEEKLY_REPORT_REPO_ROOTS";
 
 type Config = {
   author?: string | string[];
   stat_mode?: string;
   week_start?: number;
   week_offset?: number;
+  day_offset?: number;
   month_offset?: number;
   repo_roots?: string[] | string;
   company_git_patterns?: string[] | string;
@@ -26,6 +33,7 @@ let AUTHOR: string | string[] = "";
 let STAT_MODE = "week";
 let WEEK_START = 0;
 let WEEK_OFFSET = 0;
+let DAY_OFFSET = 0;
 let MONTH_OFFSET = 0;
 let REPO_ROOTS: string[] = [];
 let COMPANY_GIT_PATTERNS: string[] = [];
@@ -57,6 +65,7 @@ function buildDefaultConfig(): Config {
     stat_mode: "week",
     week_start: 0,
     week_offset: 0,
+    day_offset: 0,
     month_offset: 0,
     repo_roots: [process.cwd()],
     company_git_patterns: [],
@@ -68,9 +77,13 @@ function buildDefaultConfig(): Config {
 function loadConfig(): { config: Config; configPath: string; generated: boolean } {
   const candidates = [
     process.env[CONFIG_ENV] ?? "",
+    process.env[LEGACY_CONFIG_ENV] ?? "",
+    path.join(process.cwd(), "report.config.json"),
     path.join(process.cwd(), "weekly.config.json"),
     DEFAULT_CONFIG_PATH,
-    path.join(os.homedir(), ".weekly-report.json"),
+    LEGACY_CONFIG_PATH,
+    DEFAULT_CONFIG_FILE,
+    LEGACY_CONFIG_FILE,
   ];
 
   for (const candidate of candidates) {
@@ -88,7 +101,7 @@ function loadConfig(): { config: Config; configPath: string; generated: boolean 
     }
   }
 
-  const envPath = (process.env[CONFIG_ENV] ?? "").trim();
+  const envPath = (process.env[CONFIG_ENV] ?? "").trim() || (process.env[LEGACY_CONFIG_ENV] ?? "").trim();
   const targetPath = envPath || DEFAULT_CONFIG_PATH;
   const config = buildDefaultConfig();
   try {
@@ -106,11 +119,15 @@ function applyConfig(config: Config) {
 
   if (config.author !== undefined) AUTHOR = config.author;
   if (config.stat_mode !== undefined) {
-    const mode = String(config.stat_mode ?? STAT_MODE).trim().toLowerCase();
-    if (mode) STAT_MODE = mode;
+    const raw = String(config.stat_mode ?? STAT_MODE).trim().toLowerCase();
+    if (raw === "daily" || raw === "day" || raw === "日" || raw === "日报") STAT_MODE = "day";
+    else if (raw === "weekly" || raw === "week" || raw === "周" || raw === "周报") STAT_MODE = "week";
+    else if (raw === "monthly" || raw === "month" || raw === "月" || raw === "月报") STAT_MODE = "month";
+    else if (raw) STAT_MODE = raw;
   }
   if (config.week_start !== undefined) WEEK_START = maybeInt(config.week_start, WEEK_START);
   if (config.week_offset !== undefined) WEEK_OFFSET = maybeInt(config.week_offset, WEEK_OFFSET);
+  if (config.day_offset !== undefined) DAY_OFFSET = maybeInt(config.day_offset, DAY_OFFSET);
   if (config.month_offset !== undefined) MONTH_OFFSET = maybeInt(config.month_offset, MONTH_OFFSET);
   if (config.repo_roots !== undefined) REPO_ROOTS = normalizeList(config.repo_roots);
   if (config.company_git_patterns !== undefined) COMPANY_GIT_PATTERNS = normalizeList(config.company_git_patterns);
@@ -119,7 +136,7 @@ function applyConfig(config: Config) {
 }
 
 function defaultRepoRoots(): string[] {
-  const env = (process.env.WEEKLY_REPORT_REPO_ROOTS ?? "").trim();
+  const env = (process.env[REPORT_REPO_ROOTS_ENV] ?? "").trim() || (process.env[LEGACY_REPO_ROOTS_ENV] ?? "").trim();
   if (env) {
     if (env.includes(path.delimiter)) {
       return env
@@ -149,6 +166,14 @@ function getWeekRange(weekOffset = 0, weekStart = 0): [string, string] {
   const end = new Date(start);
   end.setDate(start.getDate() + 6);
   return [formatDate(start), formatDate(end)];
+}
+
+function getDayRange(dayOffset = 0): [string, string] {
+  const today = new Date();
+  const target = new Date(today);
+  target.setDate(today.getDate() - dayOffset);
+  const day = formatDate(target);
+  return [day, day];
 }
 
 function getMonthRange(monthOffset = 0): [string, string] {
@@ -638,7 +663,7 @@ function main() {
       console.error("CONFIG_INIT_REQUIRED: 请先修改配置后再运行。");
       process.exit(1);
     }
-    console.error("CONFIG_INIT_REQUIRED: 未找到配置且无法写入默认配置，请检查权限或设置 WEEKLY_REPORT_CONFIG。");
+    console.error("CONFIG_INIT_REQUIRED: 未找到配置且无法写入默认配置，请检查权限或设置 REPORT_CONFIG。");
     process.exit(1);
   }
   if (Object.keys(config).length > 0) applyConfig(config);
@@ -660,6 +685,9 @@ function main() {
   if (STAT_MODE === "month") {
     [startDate, endDate] = getMonthRange(MONTH_OFFSET);
     periodType = "月";
+  } else if (STAT_MODE === "day") {
+    [startDate, endDate] = getDayRange(DAY_OFFSET);
+    periodType = "日";
   } else {
     [startDate, endDate] = getWeekRange(WEEK_OFFSET, WEEK_START);
     periodType = "周";

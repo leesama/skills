@@ -23,8 +23,9 @@ type ReportData = {
 };
 type AlignmentValue = (typeof AlignmentType)[keyof typeof AlignmentType];
 
-function periodTypeFromReport(reportType?: string): "周" | "月" {
+function periodTypeFromReport(reportType?: string): "日" | "周" | "月" {
   if (reportType && reportType.includes("月")) return "月";
+  if (reportType && reportType.includes("日")) return "日";
   return "周";
 }
 

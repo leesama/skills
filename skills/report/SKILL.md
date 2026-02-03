@@ -1,26 +1,30 @@
 ---
-name: weekly-report
-description: 生成周报/月报的技能。适用于“生成周报/工作周报/月报”“从 Git 提交生成周报”“将周报 JSON 渲染为 Word”等需求；支持多仓库扫描、按周/月统计、输出 JSON 与 Word。
+name: report
+description: 生成日报/周报/月报的技能。适用于“生成日报/周报/月报”“从 Git 提交生成报告”“将报告 JSON 渲染为 Word”等需求；支持多仓库扫描、按日/周/月统计、输出 JSON 与 Word。
 ---
 
 # 工作流
 
 ## 1) 确定范围与配置
-- 统计范围：按周或按月
+- 统计范围：按日/周/月
 - 仓库范围：单仓库或多仓库
 - 作者：可指定 user.name 或 user.email（支持逗号分隔或数组）
 - 运行环境：需要 Node.js 18+
+- 当用户明确要求“生成日报/周报/月报”时，请分别设置 `stat_mode=day/week/month`
 
 **全局配置文件**（用于覆盖脚本默认值）：
 - 读取顺序：
-  1. 环境变量 `WEEKLY_REPORT_CONFIG`
-  2. 当前目录 `weekly.config.json`
-  3. `~/.config/weekly-report/config.json`
-  4. `~/.weekly-report.json`
+  1. 环境变量 `REPORT_CONFIG`
+  2. 当前目录 `report.config.json`
+  3. `~/.config/report/config.json`
+  4. `~/.report.json`
 - 字段示例见 `resources/config.example.json`
-- 还可用 `WEEKLY_REPORT_REPO_ROOTS` 临时指定仓库根目录列表（用系统路径分隔符分隔）
-- 首次运行若未找到配置，会自动生成默认配置到 `~/.config/weekly-report/config.json`（`repo_roots` 默认当前目录），并立即退出（不会继续执行统计）
+- 还可用 `REPORT_REPO_ROOTS` 临时指定仓库根目录列表（用系统路径分隔符分隔）
+- 首次运行若未找到配置，会自动生成默认配置到 `~/.config/report/config.json`（`repo_roots` 默认当前目录），并立即退出（不会继续执行统计）
 - 当输出包含 `CONFIG_INIT_REQUIRED` 时，必须停止后续流程，仅提示用户去修改配置后再运行
+- 关键字段：
+  - `stat_mode`: `day` / `week` / `month`
+  - `day_offset`: 0=今天，1=昨天
 
 ## 2) 安装依赖（仅首次）
 

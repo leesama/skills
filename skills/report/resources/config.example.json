@@ -3,6 +3,7 @@
   "stat_mode": "week",
   "week_start": 0,
   "week_offset": 0,
+  "day_offset": 0,
   "month_offset": 0,
   "repo_roots": ["/path/to/workspace"],
   "company_git_patterns": ["github.com/your-org"],
