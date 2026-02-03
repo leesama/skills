@@ -635,10 +635,10 @@ function main() {
   if (generated) {
     if (configPath) {
       console.log(`🆕 已生成默认配置：${configPath}`);
-      console.log("请先修改配置后再运行。");
-      process.exit(0);
+      console.error("CONFIG_INIT_REQUIRED: 请先修改配置后再运行。");
+      process.exit(1);
     }
-    console.log("⚠️ 未找到配置且无法写入默认配置，请检查权限或设置 WEEKLY_REPORT_CONFIG。");
+    console.error("CONFIG_INIT_REQUIRED: 未找到配置且无法写入默认配置，请检查权限或设置 WEEKLY_REPORT_CONFIG。");
     process.exit(1);
   }
   if (Object.keys(config).length > 0) applyConfig(config);

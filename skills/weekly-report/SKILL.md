@@ -19,7 +19,8 @@ description: 生成周报/月报的技能。适用于“生成周报/工作周�
   4. `~/.weekly-report.json`
 - 字段示例见 `resources/config.example.json`
 - 还可用 `WEEKLY_REPORT_REPO_ROOTS` 临时指定仓库根目录列表（用系统路径分隔符分隔）
-- 首次运行若未找到配置，会自动生成默认配置到 `~/.config/weekly-report/config.json`（`repo_roots` 默认当前目录），并提示用户修改后再运行
+- 首次运行若未找到配置，会自动生成默认配置到 `~/.config/weekly-report/config.json`（`repo_roots` 默认当前目录），并立即退出（不会继续执行统计）
+- 当输出包含 `CONFIG_INIT_REQUIRED` 时，必须停止后续流程，仅提示用户去修改配置后再运行
 
 ## 2) 安装依赖（仅首次）
 
@@ -45,8 +46,9 @@ node <skill_root>/scripts/weekly.js
 - 输出目录：默认输出到桌面（`~/Desktop`），若不存在则输出到当前目录
 - 不要覆盖或修改原始 JSON
 
-## 5) 生成优化版 JSON（可选）
-- 按需使用 `resources/prompt.txt` 对原始 JSON 进行周报化与中文化
+## 5) 生成优化版 JSON（必做）
+- 使用 `resources/prompt.txt` 对原始 JSON 进行周报化与中文化
+- 必须将 commit message 转为中文并润色为适合给老板汇报的表达
 - 输出新文件，例如：`本周工作周报_ai.json`
 
 ## 6) 渲染 Word

@@ -43,13 +43,13 @@ node scripts/weekly.js
 
 默认输出到桌面（`~/Desktop`），若不存在则输出到当前目录。
 
-渲染 Word：
+将 JSON 内容中文化并润色为汇报表达（参考 `skills/weekly-report/resources/prompt.txt`），再渲染 Word：
 
 ```bash
 node scripts/weekly_render.js -i <优化后的JSON> -o <输出文件>.docx
 ```
 
-首次运行若未找到配置，会自动生成默认配置到 `~/.config/weekly-report/config.json`，并提示用户修改后再运行。
+首次运行若未找到配置，会自动生成默认配置到 `~/.config/weekly-report/config.json`，并立即退出（不会继续执行统计）。如果输出包含 `CONFIG_INIT_REQUIRED`，需要先修改配置后再运行。
 
 ## 说明
 
