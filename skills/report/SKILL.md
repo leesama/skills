@@ -50,7 +50,6 @@ node <skill_root>/scripts/weekly.js --stat-mode day|week|month
 - 使用 `resources/prompt.txt` 对原始 JSON 中文化、报告化。
 - 将 commit message 转为适合业务汇报的中文表述。
 - 另存为新文件，例如：`本周工作周报_ai.json`。
-- 可补充下周/下月计划（2-3 条），保持报告可读性与管理视角。
 
 3. 渲染 Word
 ```bash
