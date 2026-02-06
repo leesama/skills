@@ -20,7 +20,7 @@ pnpx skills add leesama/skills --skill=report
 
 ### 2) 怎么用
 
-直接对助手说下面任一提示词：
+直接对大模型（如 Codex、Claude 等）说下面任一提示词：
 - 生成日报
 - 生成周报
 - 生成月报

@@ -20,7 +20,7 @@ pnpx skills add leesama/skills --skill=report
 
 ### 2) Use
 
-Use one of these prompts directly:
+Send one of these prompts to your LLM (for example, Codex or Claude):
 - 生成日报
 - 生成周报
 - 生成月报
