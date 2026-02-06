@@ -1,60 +1,114 @@
 ---
 name: report
-description: 生成日报/周报/月报的技能。适用于“生成日报/周报/月报”“从 Git 提交生成报告”“将报告 JSON 渲染为 Word”等需求；支持多仓库扫描、按日/周/月统计、输出 JSON 与 Word。
+description: 将 Git 提交自动整理为日报/周报/月报，并输出“原始 JSON + 优化 JSON + Word”。适用于“生成日报/周报/月报”“从提交记录生成汇报材料”“把报告渲染成 Word”等需求。
 ---
 
-# 工作流
+# report 技能说明
 
-## 1) 确定范围与配置
-- 统计范围：按日/周/月
-- 仓库范围：单仓库或多仓库
-- 作者：可指定 user.name 或 user.email（支持逗号分隔或数组）
-- 运行环境：需要 Node.js 18+
-- 当用户明确要求“生成日报/周报/月报”时，请分别设置 `stat_mode=day/week/month`
+## 这个技能是做什么的
+- 从一个或多个 Git 仓库收集提交记录，自动生成日报/周报/月报。
+- 产出三类文件：`原始 JSON`、`优化后 JSON`、`Word(.docx)`。
+- 适合把开发提交快速整理成可汇报材料。
 
-**全局配置文件**（用于覆盖脚本默认值）：
-- 读取顺序：
-  1. 环境变量 `REPORT_CONFIG`
-  2. 当前目录 `report.config.json`
-  3. `~/.config/report/config.json`
-  4. `~/.report.json`
-- 字段示例见 `resources/config.example.json`
-- 还可用 `REPORT_REPO_ROOTS` 临时指定仓库根目录列表（用系统路径分隔符分隔）
-- 首次运行若未找到配置，会自动生成默认配置到 `~/.config/report/config.json`（`repo_roots` 默认当前目录），并立即退出（不会继续执行统计）
-- 当输出包含 `CONFIG_INIT_REQUIRED` 时，必须停止后续流程，仅提示用户去修改配置后再运行
-- 关键字段：
-  - `stat_mode`: `day` / `week` / `month`
-  - `day_offset`: 0=今天，1=昨天
+## 何时使用
+- 用户说“生成日报/周报/月报”。
+- 用户说“根据 Git 提交出报告/周报/月报”。
+- 用户已有报告 JSON，需要渲染成 Word。
 
-## 2) 生成原始 JSON
-- 在任意目录执行以下命令（`<skill_root>` 为本 SKILL.md 所在目录）：
+## 输入与前置条件
+- Node.js 18+。
+- 可访问的 Git 仓库（单仓库或多仓库）。
+- 可选作者过滤：`author`（姓名/邮箱，支持逗号分隔或数组）。
+- 当用户明确要求日报/周报/月报时，分别使用：
+  - `日报` -> `stat_mode=day`
+  - `周报` -> `stat_mode=week`
+  - `月报` -> `stat_mode=month`
 
+## 参数与口径说明
+- `weekly.js` 支持参数：
+  - `-m, --stat-mode <mode>`：统计模式。
+- `stat_mode` 兼容输入：
+  - 日：`day` / `daily` / `日` / `日报`
+  - 周：`week` / `weekly` / `周` / `周报`
+  - 月：`month` / `monthly` / `月` / `月报`
+- 时间偏移口径：
+  - `day_offset=0` 今天，`1` 昨天
+  - `week_offset=0` 本周，`1` 上周
+  - `month_offset=0` 本月，`1` 上月
+
+## 标准执行流程
+1. 生成原始 JSON
 ```bash
 node <skill_root>/scripts/weekly.js --stat-mode day|week|month
 ```
+- 也支持中文参数：`日报` / `周报` / `月报`。
+- 输出文件示例：`本日工作日报_YYYY-MM-DD.json`、`本周工作周报_YYYY-MM-DD.json`。
+- 默认输出到 `~/Desktop`；若桌面不存在则输出到当前目录。
+- 原始 JSON 只读，不覆盖。
 
-- 也支持中文：`日报` / `周报` / `月报`
+2. 生成优化后 JSON（必做）
+- 使用 `resources/prompt.txt` 对原始 JSON 中文化、报告化。
+- 将 commit message 转为适合业务汇报的中文表述。
+- 另存为新文件，例如：`本周工作周报_ai.json`。
+- 可补充下周/下月计划（2-3 条），保持报告可读性与管理视角。
 
-- 输出文件形如：`本日/本周/本月工作日报/周报/月报_YYYY-MM-DD.json`
-- 输出目录：默认输出到桌面（`~/Desktop`），若不存在则输出到当前目录
-- 不要覆盖或修改原始 JSON
-
-## 3) 生成优化版 JSON（必做）
-- 使用 `resources/prompt.txt` 对原始 JSON 进行报告化与中文化
-- 必须将 commit message 转为中文并润色为适合给老板汇报的表达
-- 输出新文件，例如：`本日/本周/本月工作日报/周报/月报_ai.json`
-
-## 4) 渲染 Word
-
+3. 渲染 Word
 ```bash
 node <skill_root>/scripts/weekly_render.js -i <优化后的JSON> -o <输出文件>.docx
 ```
-## 5) 回复结果
-- 直接渲染 Word，不要询问用户是否继续
-- 返回最终 Word 文件的完整路径
-- 同时返回优化后的 JSON 文件路径
 
-# 注意事项
-- 若未找到仓库，优先配置 `repo_paths` 或 `repo_roots`
-- 如需多仓库统计，建议设置 `repo_roots` 并结合 `company_git_patterns` 过滤
-- 依赖安装与编译请参考 `skills/report/README.md`
+4. 返回结果
+- 直接给出最终 `.docx` 完整路径。
+- 同时给出优化后 JSON 的完整路径。
+- 不需要再询问“是否继续渲染 Word”。
+
+## 配置与异常处理
+- 配置文件读取顺序：
+  1. `REPORT_CONFIG` 指向的文件
+  2. `WEEKLY_REPORT_CONFIG`（兼容）
+  3. 当前目录 `report.config.json`
+  4. 当前目录 `weekly.config.json`（兼容）
+  5. `~/.config/report/config.json`
+  6. `~/.config/weekly-report/config.json`（兼容）
+  7. `~/.report.json`
+  8. `~/.weekly-report.json`（兼容）
+- 字段示例：`resources/config.example.json`。
+- 可用 `REPORT_REPO_ROOTS` 临时指定仓库根目录（系统路径分隔符分隔）。
+- 兼容环境变量：`WEEKLY_REPORT_REPO_ROOTS`。
+- 首次运行若未找到配置，会自动生成默认配置到 `~/.config/report/config.json` 并立即退出。
+- 当输出包含 `CONFIG_INIT_REQUIRED` 时，必须停止后续流程，仅提示用户先完成配置再重跑。
+
+## 关键配置项
+- `stat_mode`: `day` / `week` / `month`
+- `day_offset`: 0=今天，1=昨天
+- `week_offset`: 0=本周，1=上周
+- `month_offset`: 0=本月，1=上月
+- `repo_roots`: 仓库根目录列表（递归扫描）
+- `repo_paths`: 显式仓库路径（非空时优先）
+- `company_git_patterns`: 按远程地址关键词过滤仓库
+- `max_scan_depth`: 扫描深度（默认 `4`）
+
+## 输出结构（用于优化与渲染）
+- 原始 JSON 关键字段：
+  - `report_type`: `日报` / `周报` / `月报`
+  - `period.start_date` / `period.end_date`
+  - `statistics.total_commits` / `statistics.total_tasks`
+  - `projects[].project_name + tasks[]`
+  - `tasks[]` 每项包含：`content` / `completion_standard` / `status` / `notes` / `project_name`
+- `weekly_render.js` 最少依赖：
+  - `report_type`
+  - `period.start_date`, `period.end_date`
+  - `statistics.total_commits`
+  - `tasks[]`
+
+## 常见失败处理
+- `CONFIG_INIT_REQUIRED`：先补全配置再重跑，不继续后续流程。
+- 扫描到 0 个仓库：优先检查 `repo_paths`、`repo_roots`、`company_git_patterns`。
+- 需要只渲染 Word：可跳过统计，直接执行：
+```bash
+node <skill_root>/scripts/weekly_render.js -i <已有JSON> -o <输出文件>.docx
+```
+
+## 说明
+- 若未找到仓库，优先检查 `repo_paths` 或 `repo_roots`。
+- 对用户侧应以“描述需求 -> 自动生成报告”为主，不要求用户手动执行安装或构建命令。
