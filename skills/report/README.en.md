@@ -4,6 +4,32 @@ English | [中文](README.md)
 
 Turn Git commits into daily/weekly/monthly reports with ready-to-share outputs.
 
+## One-Line Pitch
+
+Turn scattered commits into boss-ready daily/weekly/monthly reports in one shot, with Word output included.
+
+## Simplest Guide
+
+### 1) Install
+
+If this skill (or all skills) is already installed globally, you can skip this step.
+
+```bash
+pnpx skills add leesama/skills --skill=report
+```
+
+### 2) Use
+
+Use one of these prompts directly:
+- 生成日报
+- 生成周报
+- 生成月报
+
+You will receive three output files:
+- Raw JSON (source facts)
+- Optimized JSON (report-ready wording)
+- Word (`.docx`, ready to share)
+
 ## What This Skill Does
 - Scans one or multiple Git repositories.
 - Aggregates work by day/week/month.
@@ -16,21 +42,6 @@ Turn Git commits into daily/weekly/monthly reports with ready-to-share outputs.
 - "Generate today's/this week's/this month's report"
 - "Create a weekly/monthly report from Git commits"
 - "Render an existing report JSON to Word"
-
-## Quick Start (3 minutes)
-
-1. Tell the assistant what report you want:
-- For example: today/this week/this month, which repos, and optional author filter.
-
-2. The assistant generates raw JSON automatically:
-- It aggregates Git commits into structured report data.
-
-3. The assistant produces optimized JSON from raw JSON (using `resources/prompt.txt`):
-- Convert commit messages into polished, reporting-friendly Chinese.
-- Keep raw JSON unchanged; save optimized JSON as a new file (for example `*_ai.json`).
-
-4. The assistant renders Word:
-- It generates a `.docx` file and returns the final file path.
 
 ## Output Files
 - Raw JSON: for example `本周工作周报_YYYY-MM-DD.json`
