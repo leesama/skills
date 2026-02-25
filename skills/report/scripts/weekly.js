@@ -15,6 +15,8 @@ const DEFAULT_CONFIG_FILE = path_1.default.join(os_1.default.homedir(), ".report
 const LEGACY_CONFIG_FILE = path_1.default.join(os_1.default.homedir(), ".weekly-report.json");
 const REPORT_REPO_ROOTS_ENV = "REPORT_REPO_ROOTS";
 const LEGACY_REPO_ROOTS_ENV = "WEEKLY_REPORT_REPO_ROOTS";
+const REPORT_OUTPUT_DIR_ENV = "REPORT_OUTPUT_DIR";
+const LEGACY_OUTPUT_DIR_ENV = "WEEKLY_REPORT_OUTPUT_DIR";
 let AUTHOR = "";
 let STAT_MODE = "week";
 let WEEK_START = 0;
@@ -25,6 +27,7 @@ let REPO_ROOTS = [];
 let COMPANY_GIT_PATTERNS = [];
 let REPO_PATHS = [];
 let MAX_SCAN_DEPTH = 4;
+let OUTPUT_DIR = "";
 function normalizeList(value) {
     if (!value)
         return [];
@@ -43,6 +46,9 @@ function maybeInt(value, fallback) {
     const n = Number(value);
     return Number.isFinite(n) ? Math.trunc(n) : fallback;
 }
+function maybePath(value) {
+    return typeof value === "string" ? value.trim() : "";
+}
 function buildDefaultConfig() {
     return {
         author: "",
@@ -55,6 +61,7 @@ function buildDefaultConfig() {
         company_git_patterns: [],
         repo_paths: [],
         max_scan_depth: 4,
+        output_dir: "",
     };
 }
 function loadConfig() {
@@ -122,6 +129,32 @@ function applyConfig(config) {
         REPO_PATHS = normalizeList(config.repo_paths);
     if (config.max_scan_depth !== undefined)
         MAX_SCAN_DEPTH = maybeInt(config.max_scan_depth, MAX_SCAN_DEPTH);
+    if (config.output_dir !== undefined)
+        OUTPUT_DIR = maybePath(config.output_dir);
+}
+function resolveOutputDir(configuredDir) {
+    const candidates = [
+        process.env[REPORT_OUTPUT_DIR_ENV] ?? "",
+        process.env[LEGACY_OUTPUT_DIR_ENV] ?? "",
+        configuredDir,
+    ]
+        .map((item) => String(item ?? "").trim())
+        .filter(Boolean);
+    for (const candidate of candidates) {
+        const dir = path_1.default.resolve(candidate);
+        try {
+            if (!fs_1.default.existsSync(dir))
+                fs_1.default.mkdirSync(dir, { recursive: true });
+            if (fs_1.default.statSync(dir).isDirectory())
+                return dir;
+            console.warn(`⚠️ 输出目录不是文件夹，已忽略：${dir}`);
+        }
+        catch {
+            console.warn(`⚠️ 输出目录不可用，已忽略：${dir}`);
+        }
+    }
+    const desktopDir = path_1.default.join(os_1.default.homedir(), "Desktop");
+    return fs_1.default.existsSync(desktopDir) && fs_1.default.statSync(desktopDir).isDirectory() ? desktopDir : process.cwd();
 }
 function normalizeStatMode(value, fallback) {
     const raw = String(value ?? "").trim().toLowerCase();
@@ -639,8 +672,7 @@ function saveTasksToJson(tasks, startDate, endDate, totalCommits, periodType) {
         jsonData.projects.push({ project_name: projectName, tasks: projectTasks });
         jsonData.tasks.push(...projectTasks);
     }
-    const desktopDir = path_1.default.join(os_1.default.homedir(), "Desktop");
-    const outputDir = fs_1.default.existsSync(desktopDir) && fs_1.default.statSync(desktopDir).isDirectory() ? desktopDir : process.cwd();
+    const outputDir = resolveOutputDir(OUTPUT_DIR);
     const jsonFile = path_1.default.join(outputDir, `本${periodType}工作${periodType}报_${endDate}.json`);
     fs_1.default.writeFileSync(jsonFile, JSON.stringify(jsonData, null, 2), "utf-8");
     console.log(`✅ JSON数据已生成：${jsonFile}`);

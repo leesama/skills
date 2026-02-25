@@ -43,7 +43,7 @@ node <skill_root>/scripts/weekly.js --stat-mode day|week|month
 ```
 - 也支持中文参数：`日报` / `周报` / `月报`。
 - 输出文件示例：`本日工作日报_YYYY-MM-DD.json`、`本周工作周报_YYYY-MM-DD.json`。
-- 默认输出到 `~/Desktop`；若桌面不存在则输出到当前目录。
+- 默认输出到 `output_dir`（若未配置则回退到 `~/Desktop`，再回退到当前目录）。
 - 原始 JSON 只读，不覆盖。
 
 2. 生成优化后 JSON（必做）
@@ -74,6 +74,8 @@ node <skill_root>/scripts/weekly_render.js -i <优化后的JSON> -o <输出文�
 - 字段示例：`resources/config.example.json`。
 - 可用 `REPORT_REPO_ROOTS` 临时指定仓库根目录（系统路径分隔符分隔）。
 - 兼容环境变量：`WEEKLY_REPORT_REPO_ROOTS`。
+- 可用 `REPORT_OUTPUT_DIR` 临时指定输出目录。
+- 兼容环境变量：`WEEKLY_REPORT_OUTPUT_DIR`。
 - 首次运行若未找到配置，会自动生成默认配置到 `~/.config/report/config.json` 并立即退出。
 - 当输出包含 `CONFIG_INIT_REQUIRED` 时，必须停止后续流程，仅提示用户先完成配置再重跑。
 
@@ -86,6 +88,7 @@ node <skill_root>/scripts/weekly_render.js -i <优化后的JSON> -o <输出文�
 - `repo_paths`: 显式仓库路径（非空时优先）
 - `company_git_patterns`: 按远程地址关键词过滤仓库
 - `max_scan_depth`: 扫描深度（默认 `4`）
+- `output_dir`: 报告默认输出目录
 
 ## 输出结构（用于优化与渲染）
 - 原始 JSON 关键字段：

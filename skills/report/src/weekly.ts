@@ -11,6 +11,8 @@ const DEFAULT_CONFIG_FILE = path.join(os.homedir(), ".report.json");
 const LEGACY_CONFIG_FILE = path.join(os.homedir(), ".weekly-report.json");
 const REPORT_REPO_ROOTS_ENV = "REPORT_REPO_ROOTS";
 const LEGACY_REPO_ROOTS_ENV = "WEEKLY_REPORT_REPO_ROOTS";
+const REPORT_OUTPUT_DIR_ENV = "REPORT_OUTPUT_DIR";
+const LEGACY_OUTPUT_DIR_ENV = "WEEKLY_REPORT_OUTPUT_DIR";
 
 type Config = {
   author?: string | string[];
@@ -23,6 +25,7 @@ type Config = {
   company_git_patterns?: string[] | string;
   repo_paths?: string[] | string;
   max_scan_depth?: number;
+  output_dir?: string;
 };
 
 type CommitItem = string;
@@ -39,6 +42,7 @@ let REPO_ROOTS: string[] = [];
 let COMPANY_GIT_PATTERNS: string[] = [];
 let REPO_PATHS: string[] = [];
 let MAX_SCAN_DEPTH = 4;
+let OUTPUT_DIR = "";
 
 function normalizeList(value: unknown): string[] {
   if (!value) return [];
@@ -59,6 +63,10 @@ function maybeInt(value: unknown, fallback: number): number {
   return Number.isFinite(n) ? Math.trunc(n) : fallback;
 }
 
+function maybePath(value: unknown): string {
+  return typeof value === "string" ? value.trim() : "";
+}
+
 function buildDefaultConfig(): Config {
   return {
     author: "",
@@ -71,6 +79,7 @@ function buildDefaultConfig(): Config {
     company_git_patterns: [],
     repo_paths: [],
     max_scan_depth: 4,
+    output_dir: "",
   };
 }
 
@@ -129,6 +138,31 @@ function applyConfig(config: Config) {
   if (config.company_git_patterns !== undefined) COMPANY_GIT_PATTERNS = normalizeList(config.company_git_patterns);
   if (config.repo_paths !== undefined) REPO_PATHS = normalizeList(config.repo_paths);
   if (config.max_scan_depth !== undefined) MAX_SCAN_DEPTH = maybeInt(config.max_scan_depth, MAX_SCAN_DEPTH);
+  if (config.output_dir !== undefined) OUTPUT_DIR = maybePath(config.output_dir);
+}
+
+function resolveOutputDir(configuredDir: string): string {
+  const candidates = [
+    process.env[REPORT_OUTPUT_DIR_ENV] ?? "",
+    process.env[LEGACY_OUTPUT_DIR_ENV] ?? "",
+    configuredDir,
+  ]
+    .map((item) => String(item ?? "").trim())
+    .filter(Boolean);
+
+  for (const candidate of candidates) {
+    const dir = path.resolve(candidate);
+    try {
+      if (!fs.existsSync(dir)) fs.mkdirSync(dir, { recursive: true });
+      if (fs.statSync(dir).isDirectory()) return dir;
+      console.warn(`⚠️ 输出目录不是文件夹，已忽略：${dir}`);
+    } catch {
+      console.warn(`⚠️ 输出目录不可用，已忽略：${dir}`);
+    }
+  }
+
+  const desktopDir = path.join(os.homedir(), "Desktop");
+  return fs.existsSync(desktopDir) && fs.statSync(desktopDir).isDirectory() ? desktopDir : process.cwd();
 }
 
 function normalizeStatMode(value: string, fallback: string): string {
@@ -665,9 +699,7 @@ function saveTasksToJson(tasks: TaskRow[], startDate: string, endDate: string, t
     jsonData.tasks.push(...projectTasks);
   }
 
-  const desktopDir = path.join(os.homedir(), "Desktop");
-  const outputDir =
-    fs.existsSync(desktopDir) && fs.statSync(desktopDir).isDirectory() ? desktopDir : process.cwd();
+  const outputDir = resolveOutputDir(OUTPUT_DIR);
   const jsonFile = path.join(outputDir, `本${periodType}工作${periodType}报_${endDate}.json`);
   fs.writeFileSync(jsonFile, JSON.stringify(jsonData, null, 2), "utf-8");
   console.log(`✅ JSON数据已生成：${jsonFile}`);

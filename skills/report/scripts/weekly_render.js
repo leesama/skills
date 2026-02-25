@@ -7,6 +7,67 @@ const fs_1 = __importDefault(require("fs"));
 const os_1 = __importDefault(require("os"));
 const path_1 = __importDefault(require("path"));
 const docx_1 = require("docx");
+const CONFIG_ENV = "REPORT_CONFIG";
+const LEGACY_CONFIG_ENV = "WEEKLY_REPORT_CONFIG";
+const DEFAULT_CONFIG_PATH = path_1.default.join(os_1.default.homedir(), ".config/report/config.json");
+const LEGACY_CONFIG_PATH = path_1.default.join(os_1.default.homedir(), ".config/weekly-report/config.json");
+const DEFAULT_CONFIG_FILE = path_1.default.join(os_1.default.homedir(), ".report.json");
+const LEGACY_CONFIG_FILE = path_1.default.join(os_1.default.homedir(), ".weekly-report.json");
+const OUTPUT_DIR_ENV = "REPORT_OUTPUT_DIR";
+const LEGACY_OUTPUT_DIR_ENV = "WEEKLY_REPORT_OUTPUT_DIR";
+function maybePath(value) {
+    return typeof value === "string" ? value.trim() : "";
+}
+function readOutputDirFromConfig() {
+    const envOutput = maybePath(process.env[OUTPUT_DIR_ENV]) || maybePath(process.env[LEGACY_OUTPUT_DIR_ENV]);
+    if (envOutput)
+        return envOutput;
+    const configCandidates = [
+        maybePath(process.env[CONFIG_ENV]),
+        maybePath(process.env[LEGACY_CONFIG_ENV]),
+        path_1.default.join(process.cwd(), "report.config.json"),
+        path_1.default.join(process.cwd(), "weekly.config.json"),
+        DEFAULT_CONFIG_PATH,
+        LEGACY_CONFIG_PATH,
+        DEFAULT_CONFIG_FILE,
+        LEGACY_CONFIG_FILE,
+    ];
+    for (const candidate of configCandidates) {
+        if (!candidate)
+            continue;
+        try {
+            if (!fs_1.default.existsSync(candidate) || !fs_1.default.statSync(candidate).isFile())
+                continue;
+            const raw = fs_1.default.readFileSync(candidate, "utf-8");
+            const data = JSON.parse(raw);
+            const outputDir = maybePath(data?.output_dir);
+            if (outputDir)
+                return outputDir;
+        }
+        catch {
+            continue;
+        }
+    }
+    return "";
+}
+function resolveDefaultOutputDir() {
+    const configuredDir = readOutputDirFromConfig();
+    if (configuredDir) {
+        const dir = path_1.default.resolve(configuredDir);
+        try {
+            if (!fs_1.default.existsSync(dir))
+                fs_1.default.mkdirSync(dir, { recursive: true });
+            if (fs_1.default.statSync(dir).isDirectory())
+                return dir;
+            console.warn(`⚠️ 输出目录不是文件夹，已忽略：${dir}`);
+        }
+        catch {
+            console.warn(`⚠️ 输出目录不可用，已忽略：${dir}`);
+        }
+    }
+    const desktopDir = path_1.default.join(os_1.default.homedir(), "Desktop");
+    return fs_1.default.existsSync(desktopDir) && fs_1.default.statSync(desktopDir).isDirectory() ? desktopDir : process.cwd();
+}
 function periodTypeFromReport(reportType) {
     if (reportType && reportType.includes("月"))
         return "月";
@@ -85,8 +146,7 @@ async function renderWord(data, outputFile) {
     });
     let file = outputFile || `本${periodType}工作${periodType}报_${endDate}.docx`;
     if (!outputFile) {
-        const desktopDir = path_1.default.join(os_1.default.homedir(), "Desktop");
-        const outputDir = fs_1.default.existsSync(desktopDir) && fs_1.default.statSync(desktopDir).isDirectory() ? desktopDir : process.cwd();
+        const outputDir = resolveDefaultOutputDir();
         file = path_1.default.join(outputDir, file);
     }
     const buffer = await docx_1.Packer.toBuffer(doc);

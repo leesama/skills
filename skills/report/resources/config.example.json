@@ -8,5 +8,6 @@
   "repo_roots": ["/path/to/workspace"],
   "company_git_patterns": ["github.com/your-org"],
   "repo_paths": [],
-  "max_scan_depth": 4
+  "max_scan_depth": 4,
+  "output_dir": "/Users/lee/report"
 }
