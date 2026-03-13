@@ -56,10 +56,31 @@ node <skill_root>/scripts/weekly.js --stat-mode day|week|month
 node <skill_root>/scripts/weekly_render.js -i <优化后的JSON> -o <输出文件>.docx
 ```
 
-4. 返回结果
+4. 输出便于复制的任务清单
+```bash
+node <skill_root>/scripts/weekly_list.js -i <优化后的JSON>
+```
+- 输出格式为带数字序号的纯文本任务内容，便于直接复制。
+- 序号格式固定为 `1、2、3、...`。
+
+5. 返回结果
 - 直接给出最终 `.docx` 完整路径。
 - 同时给出优化后 JSON 的完整路径。
 - 不需要再询问“是否继续渲染 Word”。
+- 必须额外返回带数字序号的任务内容清单，便于用户直接复制。
+- 任务内容清单必须使用纯文本代码块输出，禁止使用 Markdown 有序列表。
+- 推荐固定回复格式如下：
+
+```text
+Word：/absolute/path/to/report.docx
+JSON：/absolute/path/to/report_ai.json
+
+可复制任务清单：
+```text
+1、第一条任务
+2、第二条任务
+```
+```
 
 ## 配置与异常处理
 - 配置文件读取顺序：
