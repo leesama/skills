@@ -2,11 +2,11 @@
 
 中文 | [English](README.en.md)
 
-帮助大模型按 Trunk-Based Development 的方式做 Git 协作：小批次改动、短分支、快速回 trunk。
+帮助大模型按 Trunk-Based Development 的方式做 Git 协作：小批次改动、短分支、快速回 trunk，并要求未完成功能必须先放在 feature flag 后面。
 
 ## 一句话说明
 
-把“主干开发”从口号变成可执行工作流，避免长分支、大 PR 和迟迟不回 trunk。
+把“主干开发”从口号变成可执行工作流，避免长分支、大 PR、迟迟不回 trunk，以及未加开关就把半成品暴露到主干。
 
 ## 怎么安装
 
@@ -21,7 +21,7 @@ pnpx skills add leesama/skills --skill=trunk-based-development
 - 我们团队用 trunk-based / 主干开发
 - 先从 `main` / `master` 拉一个短分支
 - 这个需求太大了，帮我拆成几次可合并的小改动
-- 先用 feature flag 藏起来，能尽快合回 trunk
+- 先建 feature flag，再把未完成功能尽快合回 trunk
 - 帮我看这个 PR/改动是不是太大了
 
 ## 这个技能会约束什么
@@ -30,7 +30,8 @@ pnpx skills add leesama/skills --skill=trunk-based-development
 - 优先把任务拆成可独立验证、可独立合并的小增量
 - 默认使用短生命周期分支，而不是长期功能分支
 - 合并前尽量同步最新 trunk
-- 未完成能力优先通过 feature flag、隐藏入口、默认关闭配置等方式落到 trunk
+- 只要未完成功能要先合入 trunk，就必须建立 feature flag 或等效的默认关闭保护
+- 如果做不到先加开关，就说明增量还不够小，需要继续拆分
 - 输出结论时会说明改动是否足够小、是否可独立合并、还存在哪些验证缺口
 
 ## 典型场景
@@ -38,7 +39,7 @@ pnpx skills add leesama/skills --skill=trunk-based-development
 - “我们现在使用 trunk-based，帮我按这个方式改需求”
 - “先从 main 拉分支，然后尽快合回去”
 - “这个功能太大了，拆成 3 个可独立 PR”
-- “新逻辑先别开放，先用开关保护”
+- “新逻辑先别开放，先建 feature flag 再接入”
 - “检查一下我这个分支是否偏离 trunk-based 节奏”
 
 ## 适合搭配的动作

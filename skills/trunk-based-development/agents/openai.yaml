@@ -1,4 +1,4 @@
 interface:
   display_name: "Trunk-Based Development"
-  short_description: "面向 Trunk-Based 开发的 Git 协作规则"
-  default_prompt: "使用 $trunk-based-development 按 Trunk-Based Development 方式拆分改动、创建短分支、同步 trunk 并完成验证。"
+  short_description: "面向 Trunk-Based 开发且要求 feature flag 的 Git 协作规则"
+  default_prompt: "使用 $trunk-based-development 按 Trunk-Based Development 方式拆分改动、创建短分支、同步 trunk，并为未完成功能先建立 feature flag。"
