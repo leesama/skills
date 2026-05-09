@@ -22,7 +22,7 @@ pnpx skills add leesama/skills --skill=report
 
 | 技能 | 说明 |
 | --- | --- |
-| [report](skills/report) | 生成日报/周报/月报，支持多仓库扫描、按日/周/月统计、输出 JSON 与 Word。 |
+| [report](skills/report) | 生成日报/周报/月报，支持多仓库扫描、自定义项目名、按日/周/月统计、输出 JSON 与 Word。 |
 | [trunk-based-development](skills/trunk-based-development) | 面向 Trunk-Based Development 的 Git 协作技能，强调短分支、小批次、快速回 trunk。 |
 
 ## 说明

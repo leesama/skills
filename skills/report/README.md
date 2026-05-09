@@ -90,8 +90,21 @@ pnpx skills add leesama/skills --skill=report
 - `company_git_patterns`：只统计 remote URL 含这些关键词的仓库（为空则不过滤）。
 - `repo_paths`：直接指定仓库路径列表（非空时优先使用它）。
 - `max_scan_depth`：扫描 `repo_roots` 时最大递归深度。
+- `project_names`：项目名映射，优先于 README/package.json/目录名。key 支持绝对仓库路径、仓库目录名或路径后缀；`project_name_map` 作为兼容别名也可使用。
 
 配置示例见 `resources/config.example.json`。
+
+项目名映射示例：
+
+```json
+{
+  "project_names": {
+    "/Users/example/workspace/alpha-web": "星河管理前端",
+    "nebula-service": "星河业务后端",
+    "demo/prototype-site": "星河产品原型"
+  }
+}
+```
 
 ## 原始 JSON 结构（简版）
 ```json
@@ -136,9 +149,10 @@ pnpx skills add leesama/skills --skill=report
 
 生成报告时，项目名按以下顺序获取：
 
-1. 仓库根目录的 `README.md` 第一行标题（去掉 `#`）
-2. `package.json` 的 `name` 字段
-3. 仓库目录名
+1. 配置文件 `project_names` / `project_name_map` 中匹配到的自定义项目名
+2. 仓库根目录的 `README.md` 第一行标题（去掉 `#`）
+3. `package.json` 的 `name` 字段
+4. 仓库目录名
 
 ## 工具原理
 

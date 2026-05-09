@@ -110,6 +110,15 @@ JSON：/absolute/path/to/report_ai.json
 - `company_git_patterns`: 按远程地址关键词过滤仓库
 - `max_scan_depth`: 扫描深度（默认 `4`）
 - `output_dir`: 报告默认输出目录
+- `project_names`: 项目名映射，优先于 README/package.json/目录名；key 支持绝对仓库路径、仓库目录名或路径后缀，例如：
+```json
+{
+  "project_names": {
+    "/Users/example/workspace/alpha-web": "星河管理前端",
+    "nebula-service": "星河业务后端"
+  }
+}
+```
 
 ## 输出结构（用于优化与渲染）
 - 原始 JSON 关键字段：

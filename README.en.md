@@ -22,7 +22,7 @@ pnpx skills add leesama/skills --skill=report
 
 | Skill | Description |
 | --- | --- |
-| [report](skills/report) | Generate daily/weekly/monthly reports, scan multiple repos, aggregate by day/week/month, output JSON and Word. |
+| [report](skills/report) | Generate daily/weekly/monthly reports, scan multiple repos, support custom project names, aggregate by day/week/month, output JSON and Word. |
 | [trunk-based-development](skills/trunk-based-development) | Git collaboration guidance for Trunk-Based Development with short-lived branches, small batches, and fast return to trunk. |
 
 ## Notes

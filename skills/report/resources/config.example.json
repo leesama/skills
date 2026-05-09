@@ -9,5 +9,9 @@
   "company_git_patterns": ["github.com/your-org"],
   "repo_paths": [],
   "max_scan_depth": 4,
-  "output_dir": "/Users/lee/report"
+  "output_dir": "/Users/lee/report",
+  "project_names": {
+    "/path/to/workspace/alpha-web": "星河管理前端",
+    "nebula-service": "星河业务后端"
+  }
 }

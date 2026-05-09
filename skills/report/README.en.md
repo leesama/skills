@@ -90,8 +90,21 @@ Legacy env is also supported: `WEEKLY_REPORT_REPO_ROOTS`.
 - `company_git_patterns`: Only include repos whose remote URL contains any of these strings.
 - `repo_paths`: Explicit repo paths (takes precedence when non-empty).
 - `max_scan_depth`: Max directory depth when scanning `repo_roots`.
+- `project_names`: Project-name map. It takes precedence over README/package.json/folder-name resolution. Keys can be absolute repo paths, repo folder names, or path suffixes; `project_name_map` is also supported as a compatibility alias.
 
 See `resources/config.example.json` for a full example.
+
+Project-name mapping example:
+
+```json
+{
+  "project_names": {
+    "/Users/example/workspace/alpha-web": "Starfield Admin Web",
+    "nebula-service": "Starfield Service",
+    "demo/prototype-site": "Starfield Prototype"
+  }
+}
+```
 
 ## Raw JSON Shape (Simplified)
 ```json
@@ -136,9 +149,10 @@ If you already have optimized JSON, render directly:
 
 Project name is resolved in this order:
 
-1. First line title in `README.md` (leading `#` removed)
-2. `package.json` field `name`
-3. Repository folder name
+1. Custom project name matched from `project_names` / `project_name_map`
+2. First line title in `README.md` (leading `#` removed)
+3. `package.json` field `name`
+4. Repository folder name
 
 ## How It Works
 

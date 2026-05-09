@@ -26,6 +26,8 @@ type Config = {
   repo_paths?: string[] | string;
   max_scan_depth?: number;
   output_dir?: string;
+  project_names?: Record<string, string>;
+  project_name_map?: Record<string, string>;
 };
 
 type CommitItem = string;
@@ -43,6 +45,7 @@ let COMPANY_GIT_PATTERNS: string[] = [];
 let REPO_PATHS: string[] = [];
 let MAX_SCAN_DEPTH = 4;
 let OUTPUT_DIR = "";
+let PROJECT_NAME_MAP: Record<string, string> = {};
 
 function normalizeList(value: unknown): string[] {
   if (!value) return [];
@@ -80,6 +83,7 @@ function buildDefaultConfig(): Config {
     repo_paths: [],
     max_scan_depth: 4,
     output_dir: "",
+    project_names: {},
   };
 }
 
@@ -139,6 +143,8 @@ function applyConfig(config: Config) {
   if (config.repo_paths !== undefined) REPO_PATHS = normalizeList(config.repo_paths);
   if (config.max_scan_depth !== undefined) MAX_SCAN_DEPTH = maybeInt(config.max_scan_depth, MAX_SCAN_DEPTH);
   if (config.output_dir !== undefined) OUTPUT_DIR = maybePath(config.output_dir);
+  if (config.project_names && typeof config.project_names === "object") PROJECT_NAME_MAP = config.project_names;
+  if (config.project_name_map && typeof config.project_name_map === "object") PROJECT_NAME_MAP = config.project_name_map;
 }
 
 function resolveOutputDir(configuredDir: string): string {
@@ -387,7 +393,34 @@ function resolveAuthorPattern(
   return { pattern: "", useExtended: false };
 }
 
-function getProjectNameFromReadme(repoPath: string): string {
+function getProjectNameFromConfig(repoPath: string): string {
+  const entries = Object.entries(PROJECT_NAME_MAP)
+    .map(([key, value]) => [String(key).trim(), String(value).trim()] as const)
+    .filter(([key, value]) => key && value);
+  if (entries.length === 0) return "";
+
+  const normalizedRepoPath = path.resolve(repoPath);
+  const repoBaseName = path.basename(normalizedRepoPath);
+
+  for (const [key, value] of entries) {
+    const normalizedKey = path.isAbsolute(key) ? path.resolve(key) : key.replace(/\\/g, "/");
+    if (normalizedKey === normalizedRepoPath || normalizedKey === repoBaseName) return value;
+  }
+
+  const slashRepoPath = normalizedRepoPath.replace(/\\/g, "/");
+  for (const [key, value] of entries) {
+    if (path.isAbsolute(key)) continue;
+    const normalizedKey = key.replace(/\\/g, "/").replace(/^\/+/, "");
+    if (slashRepoPath.endsWith(`/${normalizedKey}`)) return value;
+  }
+
+  return "";
+}
+
+function getProjectName(repoPath: string): string {
+  const configuredName = getProjectNameFromConfig(repoPath);
+  if (configuredName) return configuredName;
+
   const candidates = ["README.md", "readme.md", "Readme.md"];
   for (const name of candidates) {
     const readmePath = path.join(repoPath, name);
@@ -445,7 +478,7 @@ function getGitCommits(
       }
       const result = runGit(args);
       if (result.status === 0 && result.stdout.trim()) {
-        const repoName = getProjectNameFromReadme(repoPath);
+        const repoName = getProjectName(repoPath);
         const commits = result.stdout.trim().split("\n");
         const filtered: CommitItem[] = [];
         for (const line of commits) {
