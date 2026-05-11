@@ -16,6 +16,8 @@
 
 ## 安装与验证
 
+**首次安装和重新安装都使用同一条命令**，`pnpx skills add` 会自动覆盖已有安装：
+
 安装单个技能：
 
 ```bash
@@ -35,6 +37,8 @@ pnpx skills add leesama/skills --skill=report -g -y
 pnpx skills add leesama/skills --skill=trunk-based-development -g -y
 ```
 
+**注意**：不要手动复制文件或创建符号链接到 `~/.claude/skills/`，始终通过 `pnpx skills add` 来安装和更新。
+
 ## 修改后默认动作
 
 当本仓库中的 skill 被修改后，默认按以下顺序处理：
@@ -42,3 +46,5 @@ pnpx skills add leesama/skills --skill=trunk-based-development -g -y
 1. 更新对应 skill 目录下的说明文件
 2. 提交并推送到远端
 3. 通过 `pnpx skills add leesama/skills --skill=<skill-name> -g -y` 重新安装并验证
+
+**重要**：每次推送到 GitHub 后，必须执行第 3 步重新安装。因为运行时加载的是 `~/.agents/skills/` 下的副本，推送后不会自动同步，必须通过 `pnpx skills add` 拉取最新代码覆盖安装。
