@@ -1,0 +1,9 @@
+#!/bin/bash
+# If report skill source changed, rebuild before commit
+cd "$(git rev-parse --show-toplevel)"
+changed=$(git diff --cached --name-only -- skills/report/src/ skills/report/package.json)
+if [ -n "$changed" ]; then
+  echo "🔧 Report skill source changed, rebuilding..."
+  (cd skills/report && npm run build) || exit 1
+  git add skills/report/scripts/
+fi

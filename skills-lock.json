@@ -1,0 +1,17 @@
+{
+  "version": 1,
+  "skills": {
+    "report": {
+      "source": "leesama/skills",
+      "sourceType": "github",
+      "skillPath": "skills/report/SKILL.md",
+      "computedHash": "7f480d40b8bfa4c6df59078c7fc29fc239f4984b435134479df3d2c24443c076"
+    },
+    "trunk-based-development": {
+      "source": "leesama/skills",
+      "sourceType": "github",
+      "skillPath": "skills/trunk-based-development/SKILL.md",
+      "computedHash": "d8a5446606474b9029404fc60a4a901f1f35ff54a97ce0bed5bb42c04c139782"
+    }
+  }
+}

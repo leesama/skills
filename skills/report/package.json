@@ -3,13 +3,13 @@
   "private": true,
   "type": "commonjs",
   "scripts": {
-    "build": "tsc -p tsconfig.json",
+    "build": "tsc -p tsconfig.json && node bundle.js",
+    "release": "npm run build && git add scripts/ && git commit -m 'chore: rebuild bundled scripts'",
     "watch": "tsc -p tsconfig.json --watch"
   },
   "devDependencies": {
+    "docx": "^8.5.0",
+    "esbuild": "^0.25.0",
     "typescript": "^5.3.3"
-  },
-  "dependencies": {
-    "docx": "^8.5.0"
   }
 }
