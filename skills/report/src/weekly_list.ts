@@ -3,6 +3,7 @@ import path from "path";
 
 type Task = {
   content?: string;
+  date?: string;
 };
 
 type WeeklyData = {
@@ -23,9 +24,16 @@ function parseArgs(argv: string[]): { input: string } {
 
 function formatTasks(tasks: Task[]): string {
   const lines = tasks
-    .map((task) => String(task.content ?? "").trim())
-    .filter(Boolean)
-    .map((content, index) => `${index + 1}、${content}`);
+    .map((task) => {
+      const content = String(task.content ?? "").trim();
+      const date = String(task.date ?? "").trim();
+      return { content, date };
+    })
+    .filter(({ content }) => content)
+    .map(({ content, date }, index) => {
+      const datePrefix = date ? date.replace(/-/g, ".") + " " : "";
+      return `${index + 1}、${datePrefix}${content}`;
+    });
 
   return lines.join("\n");
 }

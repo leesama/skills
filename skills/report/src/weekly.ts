@@ -32,7 +32,7 @@ type Config = {
 
 type CommitItem = string;
 
-type TaskRow = [string, string, string, string, string?];
+type TaskRow = [string, string, string, string, string?, string?];
 
 let AUTHOR: string | string[] = "";
 let STAT_MODE = "week";
@@ -640,7 +640,7 @@ function processCommitsToTasks(commits: CommitItem[]): TaskRow[] {
       statuses.sort((a, b) => (priority[a] ?? 7) - (priority[b] ?? 7));
       const branchStatus = statuses[0] || "unknown";
       const status = getTaskStatusByBranch(branchStatus);
-      tasks.push([msg, "完成开发并提交", status, "", repoName]);
+      tasks.push([msg, "完成开发并提交", status, "", repoName, date]);
     }
   }
 
@@ -679,6 +679,7 @@ function finalDeduplicateTasks(tasks: TaskRow[]): TaskRow[] {
     const matched = taskData.filter((item) => item.key === key).map((item) => item.task);
     matched.sort((a, b) => (statusPriority[a[2]] ?? 4) - (statusPriority[b[2]] ?? 4));
     const best = matched[0];
+    const date = best[5] ?? "";
     const prefix = `【${repoName}】 `;
     result.push([
       `${prefix}${content}`,
@@ -686,6 +687,7 @@ function finalDeduplicateTasks(tasks: TaskRow[]): TaskRow[] {
       best[2] ?? "已完成",
       best[3] ?? "",
       repoName,
+      date,
     ]);
   }
 
@@ -711,7 +713,7 @@ function saveTasksToJson(tasks: TaskRow[], startDate: string, endDate: string, t
 
   const grouped: Record<
     string,
-    { content: string; completion_standard: string; status: string; notes: string; project_name: string }[]
+    { content: string; completion_standard: string; status: string; notes: string; project_name: string; date: string }[]
   > = {};
   for (const task of tasks) {
     const projectName = task[4] ?? "其他项目";
@@ -721,6 +723,7 @@ function saveTasksToJson(tasks: TaskRow[], startDate: string, endDate: string, t
       status: task[2] ?? "",
       notes: task[3] ?? "",
       project_name: projectName,
+      date: task[5] ?? "",
     };
     if (!grouped[projectName]) grouped[projectName] = [];
     grouped[projectName].push(item);

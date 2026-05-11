@@ -622,7 +622,7 @@ function processCommitsToTasks(commits) {
             statuses.sort((a, b) => (priority[a] ?? 7) - (priority[b] ?? 7));
             const branchStatus = statuses[0] || "unknown";
             const status = getTaskStatusByBranch(branchStatus);
-            tasks.push([msg, "完成开发并提交", status, "", repoName]);
+            tasks.push([msg, "完成开发并提交", status, "", repoName, date]);
         }
     }
     return tasks;
@@ -658,6 +658,7 @@ function finalDeduplicateTasks(tasks) {
         const matched = taskData.filter((item) => item.key === key).map((item) => item.task);
         matched.sort((a, b) => (statusPriority[a[2]] ?? 4) - (statusPriority[b[2]] ?? 4));
         const best = matched[0];
+        const date = best[5] ?? "";
         const prefix = `【${repoName}】 `;
         result.push([
             `${prefix}${content}`,
@@ -665,6 +666,7 @@ function finalDeduplicateTasks(tasks) {
             best[2] ?? "已完成",
             best[3] ?? "",
             repoName,
+            date,
         ]);
     }
     return result;
@@ -694,6 +696,7 @@ function saveTasksToJson(tasks, startDate, endDate, totalCommits, periodType) {
             status: task[2] ?? "",
             notes: task[3] ?? "",
             project_name: projectName,
+            date: task[5] ?? "",
         };
         if (!grouped[projectName])
             grouped[projectName] = [];
