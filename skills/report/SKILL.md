@@ -36,8 +36,9 @@ description: 将 Git 提交自动整理为日报/周报/月报，并输出“原
   - `week_offset=0` 本周，`1` 上周
   - `month_offset=0` 本月，`1` 上月
 
-## 标准执行流程
-1. 生成原始 JSON
+## 标准执行流程（必须严格按顺序执行，不可跳步、不可追问）
+
+### Step 1：生成原始 JSON
 ```bash
 node <skill_root>/scripts/weekly.js --stat-mode day|week|month
 ```
@@ -45,42 +46,53 @@ node <skill_root>/scripts/weekly.js --stat-mode day|week|month
 - 输出文件示例：`本日工作日报_YYYY-MM-DD.json`、`本周工作周报_YYYY-MM-DD.json`。
 - 默认输出到 `output_dir`（若未配置则回退到 `~/Desktop`，再回退到当前目录）。
 - 原始 JSON 只读，不覆盖。
+- 若提交数为 0：自动回退到上一个周期（`week_offset=1` / `day_offset=1` / `month_offset=1`），通过临时修改 config 中对应 offset 字段实现，生成后立即还原。若回退后仍为 0，则告知用户并终止流程。
 
-2. 生成优化后 JSON（必做）
-- 使用 `resources/prompt.txt` 对原始 JSON 中文化、报告化。
-- 将 commit message 转为适合业务汇报的中文表述。
-- 另存为新文件，例如：`本周工作周报_ai.json`。
+### Step 2：生成优化后 JSON（必做，禁止跳过）
+- 使用 `resources/prompt.txt` 中的规则对原始 JSON 进行中文化和汇报化处理。
+- **合并规则**：
+  - 同项目内，功能目标相同的连续提交必须合并为一条（如：同一功能的开+关、同一模块的多次样式调整）。
+  - 代码级实现细节必须移除（如：组件名、变量名、函数名）。
+  - 每条事项 1–2 句话，使用完成式中文表达。
+  - 合并后 `statistics.total_tasks` 必须更新为合并后的实际条数。
+- **输出**：另存为 `*_ai.json`（与原始 JSON 同目录）。
+- **禁止**：不得在优化阶段与用户对话或请求确认。
 
-3. 渲染 Word
+### Step 3：渲染 Word（必做，禁止跳过）
 ```bash
 node <skill_root>/scripts/weekly_render.js -i <优化后的JSON> -o <输出文件>.docx
 ```
+- 若提示缺少依赖，先执行 `cd <skill_root> && npm install`，然后重新渲染。
+- **禁止**：不得询问用户”是否需要渲染 Word”，直接执行。
 
-4. 输出便于复制的任务清单
+### Step 4：输出任务清单（必做，禁止跳过）
 ```bash
 node <skill_root>/scripts/weekly_list.js -i <优化后的JSON>
 ```
-- 输出格式为带数字序号的纯文本任务内容，便于直接复制。
 - 序号格式固定为 `1、2、3、...`。
 
-5. 返回结果
-- 直接给出最终 `.docx` 完整路径。
-- 同时给出优化后 JSON 的完整路径。
-- 不需要再询问“是否继续渲染 Word”。
-- 必须额外返回带数字序号的任务内容清单，便于用户直接复制。
-- 任务内容清单必须使用纯文本代码块输出，禁止使用 Markdown 有序列表。
-- 推荐固定回复格式如下：
+### Step 5：向用户返回结果（必须严格使用下方模板，禁止增减内容）
 
-```text
-Word：/absolute/path/to/report.docx
-JSON：/absolute/path/to/report_ai.json
+**必须且只能**输出以下格式，不要添加任何额外说明、问候语、总结或注释：
+
+```
+Word：<.docx 文件绝对路径>
+JSON：<_ai.json 文件绝对路径>
 
 可复制任务清单：
 ```text
-1、第一条任务
-2、第二条任务
+1、<日期> 【项目名】任务描述
+2、<日期> 【项目名】任务描述
+...
 ```
 ```
+
+**格式硬约束**：
+- 任务清单必须放在 ` ```text ` 代码块内，**禁止**使用 Markdown 有序列表（`1. 2. 3.`）。
+- 序号必须使用中文顿号 `1、`，**禁止**使用西式点号 `1.`。
+- 每行格式固定为：`序号、日期 【项目名】任务内容`。
+- **禁止**在模板之外添加”报告已生成”等额外文案。
+- **禁止**询问用户是否需要继续渲染 Word 或其他后续操作——全流程自动执行。
 
 ## 配置与异常处理
 - 配置文件读取顺序：
