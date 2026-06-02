@@ -1,0 +1,74 @@
+{
+  "version": 1,
+  "cli_command": "/Users/lee/.nvm/versions/node/v24.16.0/bin/lark-cli",
+  "task_identity": "",
+  "default_task_target": "yunxiao",
+  "require_confirmation_before_create": true,
+  "yunxiao_project_list_url": "https://devops.aliyun.com/projex/project?_userId=69a2b4c2a407dfca290cd885&timestamp=1780366091877&mode=redirect&sign=f26b29bd7bff1b95c7db154271c17195#viewIdentifier=4e225857724c64c16037fe76",
+  "default_tasklist_id": "",
+  "default_assignee": "",
+  "default_followers": [],
+  "description_footer": "由 Codex 通过 feishu-yunxiao-task 创建。",
+  "projects": [
+    {
+      "name": "云效项目名",
+      "project_id": "",
+      "delivery_domain": "frontend",
+      "task_scope": "当前项目职责范围说明，例如前端项目只承接页面、组件、路由、菜单权限、接口联调和前端自测任务。",
+      "task_split_guidance": [
+        "按项目职责拆分任务，标题体现前端/后端/测试等职责。",
+        "当前项目是前端项目时，只生成前端相关任务。"
+      ],
+      "yunxiao_defaults": {
+        "organization_id": "<organization-id>",
+        "task_type_id": "<task-workitem-type-id>",
+        "task_type_name": "任务",
+        "default_assignee": {
+          "name": "负责人姓名",
+          "id": "<yunxiao-user-id>"
+        },
+        "default_sprint": {
+          "name": "迭代名",
+          "id": "<sprint-id>"
+        },
+        "default_priority": {
+          "name": "中",
+          "id": "<priority-option-id>"
+        },
+        "post_create_status": "处理中"
+      },
+      "exclude_task_keywords": [
+        "后端",
+        "数据库",
+        "定时任务"
+      ],
+      "project_url": "https://devops.aliyun.com/projex/project/<project-id>",
+      "tasklist_id": "",
+      "repo_urls": [
+        "git@example.com:group/repo.git",
+        "https://example.com/group/repo.git"
+      ],
+      "local_paths": [
+        "/Users/lee/code/example-repo"
+      ],
+      "repo_patterns": [
+        "example\\.com[:/]group/repo(?:\\.git)?$"
+      ],
+      "requirement_keywords": [
+        "工资项",
+        "薪资",
+        "repo"
+      ],
+      "sprint_urls": [
+        "https://devops.aliyun.com/projex/project/<project-id>/sprint/<sprint-id>#activeTab=Workitem"
+      ],
+      "workitem_keywords": [
+        "工资项",
+        "薪资"
+      ],
+      "aliases": [
+        "repo"
+      ]
+    }
+  ]
+}
