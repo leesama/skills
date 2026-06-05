@@ -8,7 +8,7 @@
   "default_tasklist_id": "",
   "default_assignee": "",
   "default_followers": [],
-  "description_footer": "由 Codex 通过 feishu-yunxiao-task 创建。",
+  "description_footer": "由 Codex 通过 feishu-docs-yunxiao 创建。",
   "projects": [
     {
       "name": "云效项目名",

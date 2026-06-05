@@ -14,12 +14,20 @@ from urllib.error import HTTPError, URLError
 from urllib.request import Request, urlopen
 
 
+LEGACY_CONFIG_PATH = Path("~/.codex/feishu-yunxiao-task/config.json").expanduser()
+CONFIG_ENV_VALUE = os.environ.get("FEISHU_DOCS_YUNXIAO_CONFIG") or os.environ.get(
+    "FEISHU_YUNXIAO_TASK_CONFIG"
+)
 DEFAULT_CONFIG_PATH = Path(
-    os.environ.get(
-        "FEISHU_YUNXIAO_TASK_CONFIG",
-        "~/.codex/feishu-yunxiao-task/config.json",
-    )
+    CONFIG_ENV_VALUE or "~/.codex/feishu-docs-yunxiao/config.json"
 ).expanduser()
+
+if (
+    CONFIG_ENV_VALUE is None
+    and not DEFAULT_CONFIG_PATH.exists()
+    and LEGACY_CONFIG_PATH.exists()
+):
+    DEFAULT_CONFIG_PATH = LEGACY_CONFIG_PATH
 
 YUNXIAO_OPENAPI_BASE = "https://openapi-rdc.aliyuncs.com"
 
@@ -94,7 +102,7 @@ def default_config(yunxiao_project_list_url="", cli_command="lark-cli", with_exa
         "default_tasklist_id": "",
         "default_assignee": "",
         "default_followers": [],
-        "description_footer": "由 Codex 通过 feishu-yunxiao-task 创建。",
+        "description_footer": "由 Codex 通过 feishu-docs-yunxiao 创建。",
         "projects": projects,
     }
 
@@ -102,7 +110,7 @@ def default_config(yunxiao_project_list_url="", cli_command="lark-cli", with_exa
 def load_config(path):
     if not path.exists():
         raise FileNotFoundError(
-            f"配置不存在：{path}。请先运行 init-config，或设置 FEISHU_YUNXIAO_TASK_CONFIG。"
+            f"配置不存在：{path}。请先运行 init-config，或设置 FEISHU_DOCS_YUNXIAO_CONFIG。"
         )
     with path.open("r", encoding="utf-8") as f:
         return json.load(f)

@@ -1,13 +1,21 @@
 ---
-name: feishu-yunxiao-task
-description: 使用飞书官方 lark-cli/Feishu CLI 读取飞书 Wiki/云文档需求，按配置中的项目职责拆分任务，并在创建前输出三版方案等待确认；确认后通过云效 OpenAPI 创建云效任务/工作项，或按用户明确要求通过 lark-cli task 创建飞书任务。适用于用户给出飞书需求文档 URL、要求“创建云效任务”“根据需求拆任务”“按前端/后端项目职责拆分任务”“创建任务前给三版方案”“用云效 OpenAPI 建工作项”“用 lark-cli 读取需求/建飞书任务”等场景；支持全局配置项目列表、项目职责、需求关键词、仓库 URL 映射、云效迭代 URL、默认负责人和关注人。
+name: feishu-docs-yunxiao
+description: 使用飞书官方 lark-cli/Feishu CLI 优先读取飞书 Wiki/云文档，并在用户明确要求时衔接云效任务流程。只要用户发送飞书/飞书 Wiki/云文档 URL，或要求“读文档”“能读到吗”“总结文档”“提取需求”“根据飞书文档拆任务/创建任务”，都应优先使用本技能；单纯读取或总结文档时只读取并回答，不进入三版方案或创建流程。需要拆分/创建任务时，按配置中的项目职责输出三版方案，用户确认后通过云效 OpenAPI 创建云效任务/工作项，或按用户明确要求通过 lark-cli task 创建飞书任务；支持全局配置项目列表、项目职责、需求关键词、仓库 URL 映射、云效迭代 URL、默认负责人和关注人。
 ---
 
-# 飞书云效任务
+# 飞书文档云效流程
+
+## 入口判断
+
+用户消息里出现飞书 Wiki/云文档 URL 时，优先使用本技能读取文档，即使用户只是问“能读到吗”“读一下”“总结下”“这个需求是什么”。
+
+- 只读/总结/提取信息：只执行“读取飞书需求”流程，回答标题、正文要点、需求范围或读取失败原因；不要匹配云效项目、不要输出三版任务方案、不要创建任何任务。
+- 拆任务/建任务/创建云效工作项/创建飞书 Todo：先读取文档，再进入“需求驱动流程”；任何真实创建前都必须先给三版方案并等待确认。
+- 用户意图不明确时，默认按只读处理。不要因为文档内容像需求，就主动升级到建任务流程。
 
 ## 需求驱动流程
 
-用户给飞书需求文档 URL 时，按这个顺序做：
+用户明确要求基于飞书需求文档拆任务或创建任务时，按这个顺序做：
 
 1. 读取需求文档：优先用 `lark-cli docs +fetch --as bot --api-version v2 --doc '<飞书 Wiki URL>'` 直接拉取 Wiki 背后的 docx 正文；失败时再用 `wiki +node-get` 或用户身份 `docs +fetch` 补查节点/权限。如果 CLI 权限不足，用已登录浏览器打开文档并提取标题、背景、涉及模块、仓库链接、验收标准和关键词。
 2. 匹配云效项目：运行 `scripts/feishu_yunxiao_task.py detect-project --requirement-file <file>`，按 `requirement_keywords`、`repo_urls`、`repo_patterns`、`aliases`、项目名匹配。
@@ -90,12 +98,12 @@ lark-cli auth status
 
 ## 全局配置
 
-默认配置文件：`~/.codex/feishu-yunxiao-task/config.json`。也可用 `FEISHU_YUNXIAO_TASK_CONFIG` 指定。
+默认配置文件：`~/.codex/feishu-docs-yunxiao/config.json`。如果旧路径 `~/.codex/feishu-yunxiao-task/config.json` 已存在，脚本会自动兼容读取；也可用 `FEISHU_DOCS_YUNXIAO_CONFIG` 或旧环境变量 `FEISHU_YUNXIAO_TASK_CONFIG` 指定。
 
 首次创建配置：
 
 ```bash
-python3 /Users/lee/.codex/skills/feishu-yunxiao-task/scripts/feishu_yunxiao_task.py init-config \
+python3 /Users/lee/.codex/skills/feishu-docs-yunxiao/scripts/feishu_yunxiao_task.py init-config \
   --yunxiao-project-list-url 'https://devops.aliyun.com/projex/project?_userId=69a2b4c2a407dfca290cd885&timestamp=1780366091877&mode=redirect&sign=f26b29bd7bff1b95c7db154271c17195#viewIdentifier=4e225857724c64c16037fe76'
 ```
 
@@ -126,7 +134,7 @@ python3 /Users/lee/.codex/skills/feishu-yunxiao-task/scripts/feishu_yunxiao_task
 先把飞书需求正文保存到临时文件，例如 `work/requirement.txt`，再匹配项目：
 
 ```bash
-python3 /Users/lee/.codex/skills/feishu-yunxiao-task/scripts/feishu_yunxiao_task.py detect-project \
+python3 /Users/lee/.codex/skills/feishu-docs-yunxiao/scripts/feishu_yunxiao_task.py detect-project \
   --requirement-file work/requirement.txt
 ```
 
@@ -135,7 +143,7 @@ python3 /Users/lee/.codex/skills/feishu-yunxiao-task/scripts/feishu_yunxiao_task
 确认用户选择某一版方案后，优先使用脚本封装创建，不要临场手写 curl/Node：
 
 ```bash
-python3 /Users/lee/.codex/skills/feishu-yunxiao-task/scripts/feishu_yunxiao_task.py create-yunxiao-workitems \
+python3 /Users/lee/.codex/skills/feishu-docs-yunxiao/scripts/feishu_yunxiao_task.py create-yunxiao-workitems \
   --items-file work/yunxiao-items.json \
   --requirement-file work/requirement.txt \
   --requirement-url 'https://fz6gwn68j3.feishu.cn/wiki/BD3vw1GB8i3zLAk7L5IcfqeLnuf' \
@@ -146,7 +154,7 @@ python3 /Users/lee/.codex/skills/feishu-yunxiao-task/scripts/feishu_yunxiao_task
 确认预览无误后才追加 `--execute` 真正创建：
 
 ```bash
-python3 /Users/lee/.codex/skills/feishu-yunxiao-task/scripts/feishu_yunxiao_task.py create-yunxiao-workitems \
+python3 /Users/lee/.codex/skills/feishu-docs-yunxiao/scripts/feishu_yunxiao_task.py create-yunxiao-workitems \
   --items-file work/yunxiao-items.json \
   --requirement-file work/requirement.txt \
   --requirement-url 'https://fz6gwn68j3.feishu.cn/wiki/BD3vw1GB8i3zLAk7L5IcfqeLnuf' \
@@ -273,7 +281,7 @@ curl -sS \
 创建单个飞书任务时，先生成命令预览：
 
 ```bash
-python3 /Users/lee/.codex/skills/feishu-yunxiao-task/scripts/feishu_yunxiao_task.py create-task \
+python3 /Users/lee/.codex/skills/feishu-docs-yunxiao/scripts/feishu_yunxiao_task.py create-task \
   --summary '跟进：工资项调整需求' \
   --description '从需求拆出的待办、验收口径和注意事项' \
   --requirement-url 'https://fz6gwn68j3.feishu.cn/wiki/BD3vw1GB8i3zLAk7L5IcfqeLnuf' \
@@ -287,7 +295,7 @@ python3 /Users/lee/.codex/skills/feishu-yunxiao-task/scripts/feishu_yunxiao_task
 用户确认某一版飞书任务方案后，追加 `--execute` 真正创建：
 
 ```bash
-python3 /Users/lee/.codex/skills/feishu-yunxiao-task/scripts/feishu_yunxiao_task.py create-task ... --execute
+python3 /Users/lee/.codex/skills/feishu-docs-yunxiao/scripts/feishu_yunxiao_task.py create-task ... --execute
 ```
 
 创建多个飞书任务项或父子任务时，写入 JSON 文件后使用 `create-task-items`。所有任务项都会通过 `lark-cli task +create` 创建；存在 `parent_key` 时，脚本会在创建后调用 `lark-cli task +set-ancestor` 建立父子关系：
@@ -314,7 +322,7 @@ python3 /Users/lee/.codex/skills/feishu-yunxiao-task/scripts/feishu_yunxiao_task
 ```
 
 ```bash
-python3 /Users/lee/.codex/skills/feishu-yunxiao-task/scripts/feishu_yunxiao_task.py create-task-items \
+python3 /Users/lee/.codex/skills/feishu-docs-yunxiao/scripts/feishu_yunxiao_task.py create-task-items \
   --items-file work/task-items.json \
   --requirement-file work/requirement.txt \
   --requirement-url 'https://fz6gwn68j3.feishu.cn/wiki/BD3vw1GB8i3zLAk7L5IcfqeLnuf'
@@ -323,7 +331,7 @@ python3 /Users/lee/.codex/skills/feishu-yunxiao-task/scripts/feishu_yunxiao_task
 确认无误后追加 `--execute`：
 
 ```bash
-python3 /Users/lee/.codex/skills/feishu-yunxiao-task/scripts/feishu_yunxiao_task.py create-task-items ... --execute
+python3 /Users/lee/.codex/skills/feishu-docs-yunxiao/scripts/feishu_yunxiao_task.py create-task-items ... --execute
 ```
 
 常用可选参数：

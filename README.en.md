@@ -22,10 +22,10 @@ pnpx skills add leesama/skills --skill=report
 
 | Skill | Description |
 | --- | --- |
-| [feishu-yunxiao-task](skills/feishu-yunxiao-task) | Read Feishu requirement docs, present three task plans by project responsibility, and create Yunxiao workitems through the OpenAPI after confirmation. |
+| [feishu-docs-yunxiao](skills/feishu-docs-yunxiao) | Prefer reading Feishu Wiki/docs first; read-only requests only summarize or extract, while explicit task-splitting requests produce three Yunxiao plans by project responsibility and create workitems after confirmation. |
 | [report](skills/report) | Generate daily/weekly/monthly reports, scan multiple repos, support custom project names, aggregate by day/week/month, output JSON and Word. |
 | [trunk-based-development](skills/trunk-based-development) | Git collaboration guidance for Trunk-Based Development with short-lived branches, small batches, and fast return to trunk. |
 
 ## Notes
 
-- Each skill directory contains its own `README.md` / `SKILL.md`. Click the skill name to view details.
+- Each skill directory contains at least `SKILL.md`; some also include a standalone `README.md`. Click the skill name to view details.

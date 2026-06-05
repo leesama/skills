@@ -1,4 +1,0 @@
-interface:
-  display_name: "飞书云效任务"
-  short_description: "读需求并按项目职责拆云效任务"
-  default_prompt: "Use $feishu-yunxiao-task to read a Feishu requirement doc, split Yunxiao task plans according to the configured project role, present three options for confirmation, then create Yunxiao workitems only after approval."
