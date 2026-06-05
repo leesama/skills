@@ -28,4 +28,4 @@ pnpx skills add leesama/skills --skill=report
 
 ## 说明
 
-- 每个技能目录下至少包含 `SKILL.md`，部分技能另有独立 `README.md`，点击技能名可进入对应目录。
+- 每个技能目录下都有独立的 `README.md` / `SKILL.md`，点击技能名可进入对应目录。

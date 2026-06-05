@@ -28,4 +28,4 @@ pnpx skills add leesama/skills --skill=report
 
 ## Notes
 
-- Each skill directory contains at least `SKILL.md`; some also include a standalone `README.md`. Click the skill name to view details.
+- Each skill directory contains its own `README.md` / `SKILL.md`. Click the skill name to view details.
