@@ -747,6 +747,26 @@ def selected_relation_ids(item, spec, args):
     return as_id_list(value)
 
 
+def selected_parent_id(item, spec, args):
+    names = [
+        "parent_workitem_id",
+        "parent_workitem",
+        "parent_id",
+        "parentId",
+        "parentIdentifier",
+        "父工作项",
+        "父项",
+        "父级工作项",
+    ]
+    value = first_nonempty_mapping_value(item, names)
+    if value is None:
+        value = first_nonempty_mapping_value(spec, names)
+    if value is None:
+        value = args.parent_workitem_id
+    ids = as_id_list(value)
+    return ids[0] if ids else ""
+
+
 def make_relation_payload(related_workitem_id, args):
     payload = {
         "relationType": str(args.relation_type or "ASSOCIATED").upper(),
@@ -920,6 +940,17 @@ def command_create_yunxiao_workitems(args):
             print_json({"ok": False, "error": f"云效任务项 #{index + 1} 必须是 JSON object。"})
             return 1
         payload = make_yunxiao_payload(item, spec, settings, index)
+        parent_id = selected_parent_id(item, spec, args)
+        if args.require_parent_workitem and not parent_id:
+            print_json(
+                {
+                    "ok": False,
+                    "error": f"云效任务项 #{index + 1} 缺少父工作项 ID；请传 --parent-workitem-id 或在 JSON 中写 parent_workitem_id。",
+                }
+            )
+            return 1
+        if parent_id:
+            payload["parentId"] = parent_id
         relation_ids = selected_relation_ids(item, spec, args)
         if args.require_related_workitem and not relation_ids:
             print_json(
@@ -934,6 +965,7 @@ def command_create_yunxiao_workitems(args):
                 "key": str(item.get("key") or item.get("id") or index + 1),
                 "subject": payload["subject"],
                 "payload": payload,
+                "parent_workitem_id": parent_id,
                 "relation_records": [
                     make_relation_payload(related_id, args)
                     for related_id in relation_ids
@@ -950,12 +982,13 @@ def command_create_yunxiao_workitems(args):
         "requirement_title": args.requirement_title or spec.get("requirement_title", ""),
         "detection": detection,
         "endpoint": endpoint,
-        "relation_endpoint_template": relation_endpoint_template,
         "workflow_endpoint": yunxiao_workflow_endpoint(settings),
         "status_endpoint_template": status_endpoint_template,
         "post_create_status": settings.get("post_create_status") or "",
         "items": prepared,
     }
+    if any(task["relation_records"] for task in prepared):
+        result["relation_endpoint_template"] = relation_endpoint_template
 
     if not args.execute:
         result["note"] = "未调用云效 OpenAPI；确认无误后追加 --execute。"
@@ -1604,6 +1637,8 @@ def build_parser():
     yunxiao_parser.add_argument("--priority-id", default="")
     yunxiao_parser.add_argument("--post-create-status", default=None)
     yunxiao_parser.add_argument("--skip-post-create-status", action="store_true")
+    yunxiao_parser.add_argument("--parent-workitem-id", default="")
+    yunxiao_parser.add_argument("--require-parent-workitem", action="store_true")
     yunxiao_parser.add_argument("--related-workitem-id", default="")
     yunxiao_parser.add_argument("--relation-type", default="ASSOCIATED")
     yunxiao_parser.add_argument("--operator-id", default="")
