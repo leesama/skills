@@ -67,11 +67,9 @@ pnpx skills add leesama/skills --skill=feishu-docs-yunxiao
 ~/.agents/feishu-docs-yunxiao/config.json
 ```
 
-兼容旧路径和旧环境变量：
+可用环境变量覆盖配置路径：
 
-- `~/.agents/feishu-yunxiao-task/config.json`
 - `FEISHU_DOCS_YUNXIAO_CONFIG`
-- `FEISHU_YUNXIAO_TASK_CONFIG`
 
 默认配置只读取上方 `.agents` 路径或显式环境变量。
 

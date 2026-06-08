@@ -67,11 +67,9 @@ Default config file:
 ~/.agents/feishu-docs-yunxiao/config.json
 ```
 
-Legacy path and environment variables are also supported:
+You can override the config path with this environment variable:
 
-- `~/.agents/feishu-yunxiao-task/config.json`
 - `FEISHU_DOCS_YUNXIAO_CONFIG`
-- `FEISHU_YUNXIAO_TASK_CONFIG`
 
 The default config path only reads the `.agents` path above or an explicit environment variable.
 

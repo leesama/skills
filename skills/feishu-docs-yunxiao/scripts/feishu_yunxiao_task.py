@@ -14,20 +14,10 @@ from urllib.error import HTTPError, URLError
 from urllib.request import Request, urlopen
 
 
-LEGACY_CONFIG_PATH = Path("~/.agents/feishu-yunxiao-task/config.json").expanduser()
-CONFIG_ENV_VALUE = os.environ.get("FEISHU_DOCS_YUNXIAO_CONFIG") or os.environ.get(
-    "FEISHU_YUNXIAO_TASK_CONFIG"
-)
+CONFIG_ENV_VALUE = os.environ.get("FEISHU_DOCS_YUNXIAO_CONFIG")
 DEFAULT_CONFIG_PATH = Path(
     CONFIG_ENV_VALUE or "~/.agents/feishu-docs-yunxiao/config.json"
 ).expanduser()
-
-if (
-    CONFIG_ENV_VALUE is None
-    and not DEFAULT_CONFIG_PATH.exists()
-    and LEGACY_CONFIG_PATH.exists()
-):
-    DEFAULT_CONFIG_PATH = LEGACY_CONFIG_PATH
 
 YUNXIAO_OPENAPI_BASE = "https://openapi-rdc.aliyuncs.com"
 

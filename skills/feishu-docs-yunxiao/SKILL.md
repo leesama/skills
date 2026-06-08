@@ -151,7 +151,7 @@ lark-cli auth status
 
 ## 全局配置
 
-默认配置文件：`~/.agents/feishu-docs-yunxiao/config.json`。如果旧路径 `~/.agents/feishu-yunxiao-task/config.json` 已存在，脚本会自动兼容读取；也可用 `FEISHU_DOCS_YUNXIAO_CONFIG` 或旧环境变量 `FEISHU_YUNXIAO_TASK_CONFIG` 指定。
+默认配置文件：`~/.agents/feishu-docs-yunxiao/config.json`。也可用 `FEISHU_DOCS_YUNXIAO_CONFIG` 指定其他配置文件。
 
 首次创建配置：
 
