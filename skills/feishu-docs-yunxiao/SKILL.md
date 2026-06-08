@@ -151,12 +151,12 @@ lark-cli auth status
 
 ## 全局配置
 
-默认配置文件：`~/.codex/feishu-docs-yunxiao/config.json`。如果旧路径 `~/.codex/feishu-yunxiao-task/config.json` 已存在，脚本会自动兼容读取；也可用 `FEISHU_DOCS_YUNXIAO_CONFIG` 或旧环境变量 `FEISHU_YUNXIAO_TASK_CONFIG` 指定。
+默认配置文件：`~/.agents/feishu-docs-yunxiao/config.json`。如果旧路径 `~/.agents/feishu-yunxiao-task/config.json` 已存在，脚本会自动兼容读取；也可用 `FEISHU_DOCS_YUNXIAO_CONFIG` 或旧环境变量 `FEISHU_YUNXIAO_TASK_CONFIG` 指定。
 
 首次创建配置：
 
 ```bash
-python3 /Users/lee/.codex/skills/feishu-docs-yunxiao/scripts/feishu_yunxiao_task.py init-config \
+python3 /Users/lee/.agents/skills/feishu-docs-yunxiao/scripts/feishu_yunxiao_task.py init-config \
   --yunxiao-project-list-url 'https://devops.aliyun.com/projex/project?_userId=69a2b4c2a407dfca290cd885&timestamp=1780366091877&mode=redirect&sign=f26b29bd7bff1b95c7db154271c17195#viewIdentifier=4e225857724c64c16037fe76'
 ```
 
@@ -187,7 +187,7 @@ python3 /Users/lee/.codex/skills/feishu-docs-yunxiao/scripts/feishu_yunxiao_task
 先把飞书需求正文保存到临时文件，例如 `work/requirement.txt`，再匹配项目：
 
 ```bash
-python3 /Users/lee/.codex/skills/feishu-docs-yunxiao/scripts/feishu_yunxiao_task.py detect-project \
+python3 /Users/lee/.agents/skills/feishu-docs-yunxiao/scripts/feishu_yunxiao_task.py detect-project \
   --requirement-file work/requirement.txt
 ```
 
@@ -196,7 +196,7 @@ python3 /Users/lee/.codex/skills/feishu-docs-yunxiao/scripts/feishu_yunxiao_task
 确认用户选择某一版方案后，优先使用脚本封装创建，不要临场手写 curl/Node：
 
 ```bash
-python3 /Users/lee/.codex/skills/feishu-docs-yunxiao/scripts/feishu_yunxiao_task.py create-yunxiao-workitems \
+python3 /Users/lee/.agents/skills/feishu-docs-yunxiao/scripts/feishu_yunxiao_task.py create-yunxiao-workitems \
   --items-file work/yunxiao-items.json \
   --requirement-file work/requirement.txt \
   --requirement-url 'https://fz6gwn68j3.feishu.cn/wiki/BD3vw1GB8i3zLAk7L5IcfqeLnuf' \
@@ -207,7 +207,7 @@ python3 /Users/lee/.codex/skills/feishu-docs-yunxiao/scripts/feishu_yunxiao_task
 确认预览无误后才追加 `--execute` 真正创建：
 
 ```bash
-python3 /Users/lee/.codex/skills/feishu-docs-yunxiao/scripts/feishu_yunxiao_task.py create-yunxiao-workitems \
+python3 /Users/lee/.agents/skills/feishu-docs-yunxiao/scripts/feishu_yunxiao_task.py create-yunxiao-workitems \
   --items-file work/yunxiao-items.json \
   --requirement-file work/requirement.txt \
   --requirement-url 'https://fz6gwn68j3.feishu.cn/wiki/BD3vw1GB8i3zLAk7L5IcfqeLnuf' \
@@ -329,7 +329,7 @@ curl -sS \
 创建单个飞书任务时，先生成命令预览：
 
 ```bash
-python3 /Users/lee/.codex/skills/feishu-docs-yunxiao/scripts/feishu_yunxiao_task.py create-task \
+python3 /Users/lee/.agents/skills/feishu-docs-yunxiao/scripts/feishu_yunxiao_task.py create-task \
   --summary '跟进：工资项调整需求' \
   --description '从需求拆出的待办、验收口径和注意事项' \
   --requirement-url 'https://fz6gwn68j3.feishu.cn/wiki/BD3vw1GB8i3zLAk7L5IcfqeLnuf' \
@@ -343,7 +343,7 @@ python3 /Users/lee/.codex/skills/feishu-docs-yunxiao/scripts/feishu_yunxiao_task
 用户确认某一版飞书任务方案后，追加 `--execute` 真正创建：
 
 ```bash
-python3 /Users/lee/.codex/skills/feishu-docs-yunxiao/scripts/feishu_yunxiao_task.py create-task ... --execute
+python3 /Users/lee/.agents/skills/feishu-docs-yunxiao/scripts/feishu_yunxiao_task.py create-task ... --execute
 ```
 
 创建多个飞书任务项或父子任务时，写入 JSON 文件后使用 `create-task-items`。所有任务项都会通过 `lark-cli task +create` 创建；存在 `parent_key` 时，脚本会在创建后调用 `lark-cli task +set-ancestor` 建立父子关系：
@@ -370,7 +370,7 @@ python3 /Users/lee/.codex/skills/feishu-docs-yunxiao/scripts/feishu_yunxiao_task
 ```
 
 ```bash
-python3 /Users/lee/.codex/skills/feishu-docs-yunxiao/scripts/feishu_yunxiao_task.py create-task-items \
+python3 /Users/lee/.agents/skills/feishu-docs-yunxiao/scripts/feishu_yunxiao_task.py create-task-items \
   --items-file work/task-items.json \
   --requirement-file work/requirement.txt \
   --requirement-url 'https://fz6gwn68j3.feishu.cn/wiki/BD3vw1GB8i3zLAk7L5IcfqeLnuf'
@@ -379,7 +379,7 @@ python3 /Users/lee/.codex/skills/feishu-docs-yunxiao/scripts/feishu_yunxiao_task
 确认无误后追加 `--execute`：
 
 ```bash
-python3 /Users/lee/.codex/skills/feishu-docs-yunxiao/scripts/feishu_yunxiao_task.py create-task-items ... --execute
+python3 /Users/lee/.agents/skills/feishu-docs-yunxiao/scripts/feishu_yunxiao_task.py create-task-items ... --execute
 ```
 
 常用可选参数：

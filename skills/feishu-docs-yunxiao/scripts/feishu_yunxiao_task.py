@@ -14,12 +14,12 @@ from urllib.error import HTTPError, URLError
 from urllib.request import Request, urlopen
 
 
-LEGACY_CONFIG_PATH = Path("~/.codex/feishu-yunxiao-task/config.json").expanduser()
+LEGACY_CONFIG_PATH = Path("~/.agents/feishu-yunxiao-task/config.json").expanduser()
 CONFIG_ENV_VALUE = os.environ.get("FEISHU_DOCS_YUNXIAO_CONFIG") or os.environ.get(
     "FEISHU_YUNXIAO_TASK_CONFIG"
 )
 DEFAULT_CONFIG_PATH = Path(
-    CONFIG_ENV_VALUE or "~/.codex/feishu-docs-yunxiao/config.json"
+    CONFIG_ENV_VALUE or "~/.agents/feishu-docs-yunxiao/config.json"
 ).expanduser()
 
 if (

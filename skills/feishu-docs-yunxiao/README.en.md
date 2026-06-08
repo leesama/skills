@@ -64,14 +64,16 @@ For task splitting or Yunxiao creation, make the task intent explicit:
 Default config file:
 
 ```text
-~/.codex/feishu-docs-yunxiao/config.json
+~/.agents/feishu-docs-yunxiao/config.json
 ```
 
 Legacy path and environment variables are also supported:
 
-- `~/.codex/feishu-yunxiao-task/config.json`
+- `~/.agents/feishu-yunxiao-task/config.json`
 - `FEISHU_DOCS_YUNXIAO_CONFIG`
 - `FEISHU_YUNXIAO_TASK_CONFIG`
+
+The default config path only reads the `.agents` path above or an explicit environment variable.
 
 Initialize config:
 
