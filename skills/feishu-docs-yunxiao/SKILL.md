@@ -1,6 +1,6 @@
 ---
 name: feishu-docs-yunxiao
-description: 使用飞书官方 lark-cli/Feishu CLI 优先读取飞书 Wiki/云文档，并在用户明确要求时衔接云效任务流程。只要用户发送飞书/飞书 Wiki/云文档 URL，或要求“读文档”“能读到吗”“总结文档”“提取需求”“根据飞书文档拆任务/创建任务”，都应优先使用本技能；用户直接用自然语言描述具体小任务并要求创建任务时，也使用本技能润色任务标题、范围和验收后创建云效任务。单纯读取或总结文档时只读取并回答，不进入三版方案或创建流程。需要拆分需求时，按配置中的项目职责输出三版方案，用户确认后通过云效 OpenAPI 创建云效任务/工作项；具体单任务可按“具体任务直建流程”预览后直接创建；按用户明确要求创建飞书任务时才通过 lark-cli task 创建飞书任务；支持全局配置项目列表、项目职责、需求关键词、仓库 URL 映射、云效迭代 URL、默认负责人和关注人。
+description: 使用飞书官方 lark-cli/Feishu CLI 优先读取飞书 Wiki/云文档，并在用户明确要求时衔接云效任务流程。只要用户发送飞书/飞书 Wiki/云文档 URL，或要求“读文档”“能读到吗”“总结文档”“提取需求”“根据飞书文档拆任务/创建任务”，都应优先使用本技能；用户直接用自然语言描述具体小任务并要求创建任务时，也使用本技能润色任务标题、范围和验收后创建云效任务。单纯读取或总结文档时只读取并回答，不进入三版方案或创建流程。需要拆分需求时，按配置中的项目职责输出三版方案，用户确认后通过云效 OpenAPI 创建云效任务/工作项；具体单任务可按“具体任务直建流程”预览后直接创建；按用户明确要求创建飞书任务时才通过 lark-cli task 创建飞书任务；支持全局配置项目列表、项目职责、需求关键词、仓库 URL 映射、默认负责人和关注人，迭代必须实时读取云效。
 ---
 
 # 飞书文档云效流程
@@ -23,7 +23,7 @@ description: 使用飞书官方 lark-cli/Feishu CLI 优先读取飞书 Wiki/云�
 2. 匹配云效项目：运行 `scripts/feishu_yunxiao_task.py detect-project --requirement-file <file>`，按 `requirement_keywords`、`repo_urls`、`repo_patterns`、`aliases`、项目名匹配。
 3. 读取项目职责：从命中的 `projects[]` 读取 `delivery_domain`、`task_scope`、`task_split_guidance`、`exclude_task_keywords`。这些字段决定任务拆分边界；例如当前仓库是前端项目，就只生成前端相关任务。
 4. 生成三版方案：在任何真实创建前，先输出 A/B/C 三版任务方案并停下等待用户确认。即使用户说“创建任务”，也先出方案，不直接创建。
-5. 创建云效任务：用户明确确认某版后，优先通过云效 OpenAPI 创建云效任务/工作项；`lark-cli` 只用于读取飞书文档和创建飞书 Todo，不能创建云效任务。不要因为 `lark-cli task` 能创建飞书任务就把云效需求建到飞书 Todo。
+5. 创建云效任务：用户明确确认某版后，优先通过云效 OpenAPI 创建云效任务/工作项；`lark-cli` 只用于读取飞书文档和创建飞书 Todo，不能创建云效任务。创建子任务时必须先读取云效父工作项并继承父项迭代，不能直接使用本地配置里的默认迭代。不要因为 `lark-cli task` 能创建飞书任务就把云效需求建到飞书 Todo。
 6. 回传结果：说明需求文档、云效项目、迭代、创建的云效任务编号/ID/状态，以及是否使用了云效 OpenAPI。
 
 如果用户明确要求创建飞书任务/Todo，仍然必须先出三版方案并等待确认；确认后才运行 `create-task` 或 `create-task-items --execute`。
@@ -36,7 +36,7 @@ description: 使用飞书官方 lark-cli/Feishu CLI 优先读取飞书 Wiki/云�
 2. 润色任务描述：生成一个清晰任务标题、`scope` 任务范围和 `acceptance` 验收标准。单一小改动默认生成 1 个云效任务；如果用户一句话里包含多个互不相关模块，先拆成候选任务并让用户确认。
 3. 匹配云效项目：按当前工作目录、Git remote、用户文本关键词运行 `detect-project`。命中 `delivery_domain=frontend` 时，只保留前端页面、字段展示、组件交互、接口联调和自测内容。
 4. 处理父工作项：具体单任务可以没有父工作项。若用户给了 `SJFCRM-xxx`、云效链接或需求标题，优先搜索并作为父工作项；若用户明确说“没有父工作项/不挂父项/直接创建”，就创建独立任务。不要用“关联项”替代父工作项。
-5. 创建前预览：使用 `create-yunxiao-workitems` 先不带 `--execute` 预览 payload、项目、迭代、负责人、父工作项或独立任务状态。预览无歧义且用户已明确说“创建任务/建任务”时，可以在同一轮追加 `--execute` 真正创建；若预览暴露项目、迭代、负责人不确定，停下让用户确认。
+5. 创建前预览：使用 `create-yunxiao-workitems` 先不带 `--execute` 预览 payload、项目、迭代、负责人、父工作项或独立任务状态。有父工作项时，预览必须展示从云效父项读取到的迭代；没有父工作项时，预览必须展示从云效项目迭代列表读取到的唯一进行中迭代。若无法从云效读取迭代，停止而不是退回本地配置。预览无歧义且用户已明确说“创建任务/建任务”时，可以在同一轮追加 `--execute` 真正创建；若预览暴露项目、迭代、负责人不确定，停下让用户确认。
 6. 回传结果：说明创建的云效编号/ID/链接、所属项目、迭代、负责人、状态，以及是否挂了父工作项。
 
 具体任务直建不走 A/B/C 三版方案；用户的“创建任务 + 明确任务内容”本身视为单任务创建确认。若输入实际是一个需要拆分的需求、影响多个模块或任务数超过 1 个，则回到“任务方案确认门”输出三版方案。
@@ -176,12 +176,11 @@ python3 /Users/lee/.codex/skills/feishu-docs-yunxiao/scripts/feishu_yunxiao_task
 - `projects[].local_paths`: 从当前工作目录匹配项目；例如 `/Users/lee/code/crm/crm_front` 固定映射到指定云效项目。
 - `projects[].repo_urls` / `repo_patterns`: 从需求或当前仓库 remote 匹配项目；脚本会先找 `origin`，找不到时使用 `codeup` 或第一个 remote。
 - `projects[].project_url`: 云效项目链接。
-- `projects[].sprint_urls`: 常用云效迭代链接，通常指向 `#activeTab=Workitem`。
 - `projects[].workitem_keywords`: 搜索迭代工作项时优先使用的关键词。
 - `projects[].tasklist_id`: 该项目对应的飞书任务清单。
 - `projects[].yunxiao_defaults.token_user`: `CODEUP_PERSONAL_ACCESS_TOKEN` 所属云效账号；云效任务的创建人由 token 决定，负责人 `assignedTo` 也应使用这个账号 ID。
 
-如果项目未命中，打开 `yunxiao_project_list_url`，按需求标题、模块名、仓库名或项目名查云效项目，然后把 `name`、`project_url`、`requirement_keywords`、`repo_urls`、`sprint_urls` 写回配置。
+如果项目未命中，打开 `yunxiao_project_list_url`，按需求标题、模块名、仓库名或项目名查云效项目，然后把 `name`、`project_url`、`requirement_keywords`、`repo_urls` 写回配置。不要把迭代 ID 或迭代链接写进本地配置，迭代必须创建前从云效实时读取。
 
 ## 创建云效任务
 
@@ -221,6 +220,8 @@ python3 /Users/lee/.codex/skills/feishu-docs-yunxiao/scripts/feishu_yunxiao_task
 
 创建云效任务前，优先确认父工作项（通常是迭代里已有的需求/主工作项）并拿到工作项 ID。飞书文档驱动的拆分任务和多任务默认作为父工作项的子项创建：统一父项时传 `--parent-workitem-id`；不同任务挂不同父项时，在每个 item 写 `parent_workitem_id`；这类场景执行时保留 `--require-parent-workitem`，缺少父工作项 ID 就停止。用户明确创建具体单任务时，可以不传父工作项，也不要传 `--require-parent-workitem`。不要用 `--related-workitem-id`、`--require-related-workitem` 或 relationRecords 的 `ASSOCIATED` 关联来替代父子关系。
 
+迭代必须实时读取云效，不能来自本地配置。有父工作项时，以云效父工作项的 `sprint` 为准：脚本会读取 `GET /oapi/v1/projex/organizations/{organizationId}/workitems/{parentWorkitemId}`，把父项迭代写入子任务 payload，并在预览/结果里输出 `sprint_resolution.source = parent_workitem`。没有父工作项时，脚本会读取 `GET /oapi/v1/projex/organizations/{organizationId}/projects/{projectId}/sprints`，选择唯一 `DOING` 迭代，并输出 `sprint_resolution.source = project_active_sprint`。如果父项没有迭代、项目没有唯一进行中迭代，或无法读取云效迭代，停止并让用户确认云效父项/迭代。
+
 ```json
 {
   "requirement_title": "SJFCRM-169 指掌易通话记录接入",
@@ -249,7 +250,7 @@ python3 /Users/lee/.codex/skills/feishu-docs-yunxiao/scripts/feishu_yunxiao_task
 - 项目 ID：来自配置 `projects[].project_id`。
 - 任务类型 ID：来自 `task_type_id`；缺失时查 `GET /oapi/v1/projex/organizations/{organizationId}/projects/{projectId}/workitemTypes?category=Task` 后写回配置。
 - 负责人 ID：来自 `CODEUP_PERSONAL_ACCESS_TOKEN` 所属云效账号，优先配置在 `yunxiao_defaults.token_user.id`；旧配置 `default_assignee.id` 仅作为兼容兜底。不要把云效任务负责人配置成与 token 创建人不同的账号。
-- 迭代 ID：优先来自 `default_sprint.id`。
+- 迭代 ID：始终实时读取云效；有父工作项时读取父项 `sprint.id`，无父工作项时读取项目迭代列表并选择唯一 `DOING` 迭代。不要在本地配置 `default_sprint`、`sprint_urls` 或其他迭代兜底。
 - 创建后状态：默认更新为 `处理中`；可在 `projects[].yunxiao_defaults.post_create_status` 配置，或创建命令传 `--post-create-status '<状态名或状态ID>'` 覆盖；如需保留云效默认状态，传 `--skip-post-create-status`。
 
 脚本实际调用的创建接口固定为：
@@ -424,7 +425,7 @@ lark-cli auth login --scope "task:task:write"
 - 需求文档是入口，不要仅凭当前 Git 仓库创建任务，除非用户明确要求。
 - 用户没有飞书链接但明确说“创建任务/建任务”并给出具体任务内容时，不要强行要求飞书文档；按“具体任务直建流程”优化描述并创建。
 - 用户要求创建云效项目任务时，使用云效 OpenAPI；不要用 `lark-cli task` 创建飞书 Todo 来替代云效任务。
-- 云效父子关系只能用 `parentId` / `--parent-workitem-id`，不要用“关联项” relationRecords 代替。飞书文档拆分/多任务默认需要父工作项；用户明确创建具体单任务时，可以没有父工作项并直接创建独立任务。
+- 云效父子关系只能用 `parentId` / `--parent-workitem-id`，不要用“关联项” relationRecords 代替。飞书文档拆分/多任务默认需要父工作项；用户明确创建具体单任务时，可以没有父工作项并直接创建独立任务。迭代必须从云效父项或云效项目迭代列表读取，不要使用本地迭代配置推断。
 - 创建飞书文档驱动的拆分任务或多任务前，必须先输出三版方案并等待用户确认；创建明确的单个具体任务时，不需要 A/B/C 三版，但必须先做 OpenAPI 预览并确认项目、迭代、负责人无歧义。
 - 任务拆分必须遵守项目职责配置；当前仓库若配置为前端项目，只创建前端相关任务。
 - 多个项目或多个工作项候选同样可信时，不要猜，列出候选让用户确认。

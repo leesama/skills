@@ -27,10 +27,6 @@
           "name": "CODEUP_PERSONAL_ACCESS_TOKEN 所属账号姓名",
           "id": "<yunxiao-user-id>"
         },
-        "default_sprint": {
-          "name": "迭代名",
-          "id": "<sprint-id>"
-        },
         "default_priority": {
           "name": "中",
           "id": "<priority-option-id>"
@@ -58,9 +54,6 @@
         "工资项",
         "薪资",
         "repo"
-      ],
-      "sprint_urls": [
-        "https://devops.aliyun.com/projex/project/<project-id>/sprint/<sprint-id>#activeTab=Workitem"
       ],
       "workitem_keywords": [
         "工资项",

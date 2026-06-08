@@ -57,6 +57,7 @@ For task splitting or Yunxiao creation, make the task intent explicit:
 - Yunxiao task creation: must happen only after the user confirms one plan.
 - Feishu Todo creation: only when the user explicitly asks for Feishu tasks/Todos.
 - Yunxiao task descriptions contain only task scope; acceptance criteria, requirement links, project, and sprint metadata stay in the plan or creation result.
+- Yunxiao sprint selection is live: child tasks inherit the parent workitem sprint; standalone tasks use the single active project sprint. Do not store sprint IDs in local config.
 
 ## Config Resolution and Initialization
 
@@ -90,7 +91,7 @@ See `references/config.sample.json` for a complete example.
 - `projects[].local_paths`: Match a Yunxiao project from local repository paths.
 - `projects[].repo_urls` / `repo_patterns`: Match a Yunxiao project from Git remotes.
 - `projects[].requirement_keywords`: Match a Yunxiao project from requirement text.
-- `projects[].yunxiao_defaults`: Yunxiao organization, project, task type, token owner user, sprint, priority, and post-create status defaults.
+- `projects[].yunxiao_defaults`: Yunxiao organization, project, task type, token owner user, priority, and post-create status defaults. Do not store sprint IDs in local config.
 
 ## Common Commands
 
@@ -114,8 +115,8 @@ python3 ~/.agents/skills/feishu-docs-yunxiao/scripts/feishu_yunxiao_task.py crea
   --items-file work/yunxiao-items.json \
   --requirement-file work/requirement.txt \
   --requirement-url '<Feishu Wiki/doc URL>' \
-  --related-workitem-id '<existing requirement/workitem ID in the sprint>' \
-  --require-related-workitem
+  --parent-workitem-id '<Yunxiao parent workitem ID>' \
+  --require-parent-workitem
 ```
 
 Append `--execute` only after the preview is confirmed.
@@ -133,6 +134,6 @@ Append `--execute` only after the preview is confirmed.
 - No Yunxiao project matched:
   - Check `projects[].local_paths`, `repo_urls`, `repo_patterns`, and `requirement_keywords`.
 - Yunxiao workitems cannot be created:
-  - Check `CODEUP_PERSONAL_ACCESS_TOKEN`, `organization_id`, `project_id`, `task_type_id`, token owner user ID, and sprint ID.
+  - Check `CODEUP_PERSONAL_ACCESS_TOKEN`, `organization_id`, `project_id`, `task_type_id`, and token owner user ID. Sprint selection must be readable live from the Yunxiao parent workitem or the project's active sprint.
 - Feishu permission is missing:
   - Run `lark-cli auth status` and follow the CLI prompt to add document-read or task-write scopes.

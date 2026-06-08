@@ -57,6 +57,7 @@ pnpx skills add leesama/skills --skill=feishu-docs-yunxiao
 - 创建云效任务：必须在用户确认某一版方案后执行。
 - 创建飞书 Todo：只有用户明确要求“飞书任务/Todo”时才执行。
 - 云效任务描述只写“任务范围”；验收标准、需求链接、项目和迭代放在方案说明或创建结果里。
+- 云效迭代实时读取：有父工作项时继承父项迭代；无父项时读取项目唯一进行中迭代，不在本地配置迭代。
 
 ## 配置加载与初始化
 
@@ -90,7 +91,7 @@ python3 ~/.agents/skills/feishu-docs-yunxiao/scripts/feishu_yunxiao_task.py init
 - `projects[].local_paths`：按本地仓库路径匹配云效项目。
 - `projects[].repo_urls` / `repo_patterns`：按 Git remote 匹配云效项目。
 - `projects[].requirement_keywords`：按需求正文关键词匹配云效项目。
-- `projects[].yunxiao_defaults`：云效组织、项目、任务类型、token 所属账号、迭代、优先级和创建后状态。
+- `projects[].yunxiao_defaults`：云效组织、项目、任务类型、token 所属账号、优先级和创建后状态。迭代不要写入本地配置。
 
 ## 常用命令
 
@@ -114,8 +115,8 @@ python3 ~/.agents/skills/feishu-docs-yunxiao/scripts/feishu_yunxiao_task.py crea
   --items-file work/yunxiao-items.json \
   --requirement-file work/requirement.txt \
   --requirement-url '<飞书 Wiki/云文档 URL>' \
-  --related-workitem-id '<迭代中已有需求/工作项 ID>' \
-  --require-related-workitem
+  --parent-workitem-id '<云效父工作项 ID>' \
+  --require-parent-workitem
 ```
 
 确认无误后，追加 `--execute` 才会真实创建。
@@ -133,6 +134,6 @@ python3 ~/.agents/skills/feishu-docs-yunxiao/scripts/feishu_yunxiao_task.py crea
 - 匹配不到云效项目：
   - 检查 `projects[].local_paths`、`repo_urls`、`repo_patterns`、`requirement_keywords` 是否覆盖当前仓库和需求关键词。
 - 云效任务不能创建：
-  - 检查 `CODEUP_PERSONAL_ACCESS_TOKEN`、`organization_id`、`project_id`、`task_type_id`、token 所属账号 ID 和迭代 ID。
+  - 检查 `CODEUP_PERSONAL_ACCESS_TOKEN`、`organization_id`、`project_id`、`task_type_id` 和 token 所属账号 ID；迭代需能从云效父项或项目进行中迭代实时读取。
 - 缺少飞书权限：
   - 先运行 `lark-cli auth status`，按 CLI 提示补充文档读取或任务写入 scope。

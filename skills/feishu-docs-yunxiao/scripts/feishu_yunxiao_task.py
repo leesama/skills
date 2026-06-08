@@ -57,10 +57,6 @@ def default_config(yunxiao_project_list_url="", cli_command="lark-cli", with_exa
                         "name": "CODEUP_PERSONAL_ACCESS_TOKEN 所属账号姓名",
                         "id": "<yunxiao-user-id>",
                     },
-                    "default_sprint": {
-                        "name": "迭代名",
-                        "id": "<sprint-id>",
-                    },
                     "default_priority": {
                         "name": "中",
                         "id": "<priority-option-id>",
@@ -85,9 +81,6 @@ def default_config(yunxiao_project_list_url="", cli_command="lark-cli", with_exa
                     "example\\.com[:/]group/example-repo(?:\\.git)?$"
                 ],
                 "requirement_keywords": ["示例需求", "example-repo"],
-                "sprint_urls": [
-                    "https://devops.aliyun.com/projex/project/example/sprint/example#activeTab=Workitem"
-                ],
                 "workitem_keywords": ["示例需求"],
                 "aliases": ["example-repo"],
             }
@@ -332,7 +325,6 @@ def detect_project(config, repo_url="", requirement_text="", cwd=""):
                 "project_url": item["project"].get("project_url", ""),
                 "tasklist_id": item["project"].get("tasklist_id", ""),
                 "local_paths": item["project"].get("local_paths", []),
-                "sprint_urls": item["project"].get("sprint_urls", []),
             }
             for item in scored[:10]
         ],
@@ -615,6 +607,26 @@ def selected_yunxiao_item_value(item, spec, *names):
     return ""
 
 
+SPRINT_FIELD_NAMES = [
+    "sprint_id",
+    "sprint",
+    "iteration_id",
+    "iteration",
+    "迭代ID",
+    "迭代",
+]
+
+
+def selected_sprint_id(item, spec, args=None):
+    value = first_nonempty_mapping_value(item, SPRINT_FIELD_NAMES)
+    if value is None:
+        value = first_nonempty_mapping_value(spec, SPRINT_FIELD_NAMES)
+    if value is None and args is not None:
+        value = args.sprint_id
+    ids = as_id_list(value)
+    return ids[0] if ids else ""
+
+
 def build_yunxiao_description(item, spec, index):
     scope = selected_yunxiao_item_value(
         item,
@@ -663,7 +675,6 @@ def selected_yunxiao_settings(args, project):
         "project_id": project_id,
         "workitem_type_id": args.workitem_type_id or defaults.get("task_type_id") or "",
         "assignee": args.assignee or token_user or nested_id(defaults.get("default_assignee")) or "",
-        "sprint": args.sprint_id or nested_id(defaults.get("default_sprint")) or "",
         "priority": args.priority_id or nested_id(defaults.get("default_priority")) or "",
         "post_create_status": post_create_status,
         "format_type": args.format_type,
@@ -683,7 +694,7 @@ def selected_yunxiao_settings(args, project):
     return settings
 
 
-def make_yunxiao_payload(item, spec, settings, index):
+def make_yunxiao_payload(item, spec, settings, index, resolved_sprint=None):
     subject = item.get("subject") or item.get("summary") or item.get("title")
     if not subject:
         raise ValueError(f"云效任务项 #{index + 1} 缺少 subject/summary/title。")
@@ -696,7 +707,7 @@ def make_yunxiao_payload(item, spec, settings, index):
         "subject": subject,
         "workitemTypeId": item.get("workitem_type_id") or settings["workitem_type_id"],
     }
-    sprint = item.get("sprint_id") or item.get("sprint") or settings.get("sprint")
+    sprint = resolved_sprint if resolved_sprint is not None else selected_sprint_id(item, spec)
     if sprint:
         payload["sprint"] = sprint
     priority = item.get("priority_id") or item.get("priority") or settings.get("priority")
@@ -815,12 +826,128 @@ def yunxiao_workitem_endpoint(settings, workitem_id):
     )
 
 
+def fetch_yunxiao_workitem(settings, token, workitem_id, timeout):
+    endpoint = yunxiao_workitem_endpoint(settings, workitem_id)
+    status, body, raw = yunxiao_request("GET", endpoint, token, timeout=timeout)
+    if not 200 <= status < 300:
+        raise ValueError(f"读取云效工作项 {workitem_id} 失败：HTTP {status} {raw}")
+    if not isinstance(body, dict):
+        raise ValueError(f"读取云效工作项 {workitem_id} 失败：响应不是 JSON object。")
+    return body
+
+
+def workitem_sprint_id(workitem):
+    return nested_id((workitem or {}).get("sprint"))
+
+
+def compact_sprint_for_result(sprint):
+    if not isinstance(sprint, dict):
+        return {}
+    return {
+        "id": sprint.get("id") or "",
+        "name": sprint.get("name") or sprint.get("subject") or "",
+        "status": sprint.get("status") or "",
+        "startDate": sprint.get("startDate"),
+        "endDate": sprint.get("endDate"),
+    }
+
+
+def compact_workitem_for_result(workitem):
+    return {
+        "id": (workitem or {}).get("id") or "",
+        "serialNumber": (workitem or {}).get("serialNumber") or "",
+        "subject": (workitem or {}).get("subject") or "",
+        "sprint": (workitem or {}).get("sprint") or {},
+    }
+
+
 def yunxiao_workflow_endpoint(settings):
     return (
         f"{settings['api_base']}/oapi/v1/projex/organizations/"
         f"{settings['organization_id']}/projects/{settings['project_id']}"
         f"/workitemTypes/{settings['workitem_type_id']}/workflows"
     )
+
+
+def yunxiao_sprints_endpoint(settings, page=1, per_page=100):
+    return (
+        f"{settings['api_base']}/oapi/v1/projex/organizations/"
+        f"{settings['organization_id']}/projects/{settings['project_id']}"
+        f"/sprints?page={page}&perPage={per_page}"
+    )
+
+
+def fetch_yunxiao_project_sprints(settings, token, timeout):
+    endpoint = yunxiao_sprints_endpoint(settings)
+    status, body, raw = yunxiao_request("GET", endpoint, token, timeout=timeout)
+    if not 200 <= status < 300:
+        raise ValueError(f"读取云效项目迭代失败：HTTP {status} {raw}")
+    if not isinstance(body, list):
+        raise ValueError("读取云效项目迭代失败：响应不是 JSON array。")
+    return body
+
+
+def format_sprint_choices(sprints):
+    chunks = []
+    for sprint in sprints:
+        if not isinstance(sprint, dict):
+            continue
+        chunks.append(
+            f"{sprint.get('name') or sprint.get('subject') or '<unnamed>'}"
+            f"({sprint.get('id') or ''}, {sprint.get('status') or ''})"
+        )
+    return ", ".join(chunks)
+
+
+def find_sprint_by_id(sprints, sprint_id):
+    for sprint in sprints:
+        if isinstance(sprint, dict) and str(sprint.get("id") or "") == str(sprint_id):
+            return sprint
+    return None
+
+
+def select_active_project_sprint(sprints):
+    active_statuses = {"DOING", "IN_PROGRESS", "INPROGRESS", "PROCESSING"}
+    active = [
+        sprint
+        for sprint in sprints
+        if isinstance(sprint, dict)
+        and str(sprint.get("status") or "").upper() in active_statuses
+    ]
+    if len(active) == 1:
+        return active[0]
+    if len(active) > 1:
+        raise ValueError(
+            "云效项目存在多个进行中迭代，无法自动选择："
+            + format_sprint_choices(active)
+        )
+    raise ValueError(
+        "云效项目没有进行中的迭代，无法自动选择；当前迭代列表："
+        + format_sprint_choices(sprints)
+    )
+
+
+def resolve_project_sprint(settings, token, args, item, spec, index):
+    if not token:
+        raise ValueError(
+            f"云效任务项 #{index + 1} 没有父工作项，且环境变量 {args.token_env} 未设置，"
+            "无法从云效项目读取迭代；禁止使用本地迭代配置。"
+        )
+    sprints = fetch_yunxiao_project_sprints(settings, token, args.timeout)
+    explicit_sprint_id = selected_sprint_id(item, spec, args)
+    if explicit_sprint_id:
+        sprint = find_sprint_by_id(sprints, explicit_sprint_id)
+        if not sprint:
+            raise ValueError(
+                f"显式迭代 ID 不属于当前云效项目：{explicit_sprint_id}。"
+                f"当前迭代列表：{format_sprint_choices(sprints)}"
+            )
+        if str(sprint.get("status") or "").upper() == "ARCHIVED":
+            raise ValueError(
+                f"显式迭代已归档，不能创建新任务：{format_sprint_choices([sprint])}"
+            )
+        return sprint, "explicit_sprint_verified_from_project"
+    return select_active_project_sprint(sprints), "project_active_sprint"
 
 
 def resolve_yunxiao_status_id(workflow, target_status):
@@ -891,7 +1018,6 @@ def command_create_yunxiao_workitems(args):
                 "organization_id": args.organization_id,
                 "task_type_id": args.workitem_type_id,
                 "default_assignee": {"id": args.assignee},
-                "default_sprint": {"id": args.sprint_id},
                 "default_priority": {"id": args.priority_id},
             },
         }
@@ -928,6 +1054,7 @@ def command_create_yunxiao_workitems(args):
         return 1
 
     settings = selected_yunxiao_settings(args, project)
+    token = os.environ.get(args.token_env)
     endpoint = (
         f"{settings['api_base']}/oapi/v1/projex/organizations/"
         f"{settings['organization_id']}/workitems"
@@ -941,11 +1068,12 @@ def command_create_yunxiao_workitems(args):
         f"{settings['organization_id']}/workitems/<created-workitem-id>"
     )
     prepared = []
+    parent_workitem_cache = {}
+    sprint_resolution = []
     for index, item in enumerate(items):
         if not isinstance(item, dict):
             print_json({"ok": False, "error": f"云效任务项 #{index + 1} 必须是 JSON object。"})
             return 1
-        payload = make_yunxiao_payload(item, spec, settings, index)
         parent_id = selected_parent_id(item, spec, args)
         if args.require_parent_workitem and not parent_id:
             print_json(
@@ -955,6 +1083,77 @@ def command_create_yunxiao_workitems(args):
                 }
             )
             return 1
+        resolved_sprint = ""
+        sprint_source = ""
+        parent_workitem = None
+        if parent_id:
+            if not token:
+                print_json(
+                    {
+                        "ok": False,
+                        "error": (
+                            f"云效任务项 #{index + 1} 设置了父工作项，但环境变量 {args.token_env} 未设置，"
+                            "无法从云效父项校准迭代；禁止退回本地迭代配置。"
+                        ),
+                        "token_env": args.token_env,
+                        "parent_workitem_id": parent_id,
+                    }
+                )
+                return 1
+            try:
+                if parent_id not in parent_workitem_cache:
+                    parent_workitem_cache[parent_id] = fetch_yunxiao_workitem(
+                        settings,
+                        token,
+                        parent_id,
+                        args.timeout,
+                    )
+                parent_workitem = parent_workitem_cache[parent_id]
+            except ValueError as exc:
+                print_json(
+                    {
+                        "ok": False,
+                        "error": str(exc),
+                        "parent_workitem_id": parent_id,
+                    }
+                )
+                return 1
+            resolved_sprint = workitem_sprint_id(parent_workitem)
+            resolved_sprint_info = (parent_workitem or {}).get("sprint") or {}
+            if not resolved_sprint:
+                print_json(
+                    {
+                        "ok": False,
+                        "error": (
+                            f"云效父工作项 {parent_id} 未设置迭代，无法为子任务自动校准迭代；"
+                            "请先在云效设置父项迭代。"
+                        ),
+                        "parent_workitem": compact_workitem_for_result(parent_workitem),
+                    }
+                )
+                return 1
+            sprint_source = "parent_workitem"
+        else:
+            try:
+                resolved_sprint_info, sprint_source = resolve_project_sprint(
+                    settings,
+                    token,
+                    args,
+                    item,
+                    spec,
+                    index,
+                )
+            except ValueError as exc:
+                print_json(
+                    {
+                        "ok": False,
+                        "error": str(exc),
+                    }
+                )
+                return 1
+            resolved_sprint = nested_id(resolved_sprint_info)
+
+        payload = make_yunxiao_payload(item, spec, settings, index, resolved_sprint)
         if parent_id:
             payload["parentId"] = parent_id
         relation_ids = selected_relation_ids(item, spec, args)
@@ -972,12 +1171,21 @@ def command_create_yunxiao_workitems(args):
                 "subject": payload["subject"],
                 "payload": payload,
                 "parent_workitem_id": parent_id,
+                "sprint_resolution": {
+                    "source": sprint_source,
+                    "sprint_id": resolved_sprint,
+                    "sprint": compact_sprint_for_result(resolved_sprint_info),
+                    "parent_workitem": compact_workitem_for_result(parent_workitem)
+                    if parent_workitem
+                    else {},
+                },
                 "relation_records": [
                     make_relation_payload(related_id, args)
                     for related_id in relation_ids
                 ],
             }
         )
+        sprint_resolution.append(prepared[-1]["sprint_resolution"])
 
     result = {
         "ok": True,
@@ -991,6 +1199,7 @@ def command_create_yunxiao_workitems(args):
         "workflow_endpoint": yunxiao_workflow_endpoint(settings),
         "status_endpoint_template": status_endpoint_template,
         "post_create_status": settings.get("post_create_status") or "",
+        "sprint_resolution": sprint_resolution,
         "items": prepared,
     }
     if any(task["relation_records"] for task in prepared):
@@ -1001,7 +1210,6 @@ def command_create_yunxiao_workitems(args):
         print_json(result)
         return 0
 
-    token = os.environ.get(args.token_env)
     if not token:
         print_json(
             {
