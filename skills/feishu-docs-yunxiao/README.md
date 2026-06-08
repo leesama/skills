@@ -90,7 +90,7 @@ python3 ~/.agents/skills/feishu-docs-yunxiao/scripts/feishu_yunxiao_task.py init
 - `projects[].local_paths`：按本地仓库路径匹配云效项目。
 - `projects[].repo_urls` / `repo_patterns`：按 Git remote 匹配云效项目。
 - `projects[].requirement_keywords`：按需求正文关键词匹配云效项目。
-- `projects[].yunxiao_defaults`：云效组织、项目、任务类型、负责人、迭代、优先级和创建后状态。
+- `projects[].yunxiao_defaults`：云效组织、项目、任务类型、token 所属账号、迭代、优先级和创建后状态。
 
 ## 常用命令
 
@@ -133,6 +133,6 @@ python3 ~/.agents/skills/feishu-docs-yunxiao/scripts/feishu_yunxiao_task.py crea
 - 匹配不到云效项目：
   - 检查 `projects[].local_paths`、`repo_urls`、`repo_patterns`、`requirement_keywords` 是否覆盖当前仓库和需求关键词。
 - 云效任务不能创建：
-  - 检查 `CODEUP_PERSONAL_ACCESS_TOKEN`、`organization_id`、`project_id`、`task_type_id`、负责人 ID 和迭代 ID。
+  - 检查 `CODEUP_PERSONAL_ACCESS_TOKEN`、`organization_id`、`project_id`、`task_type_id`、token 所属账号 ID 和迭代 ID。
 - 缺少飞书权限：
   - 先运行 `lark-cli auth status`，按 CLI 提示补充文档读取或任务写入 scope。

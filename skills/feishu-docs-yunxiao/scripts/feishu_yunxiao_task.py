@@ -53,8 +53,8 @@ def default_config(yunxiao_project_list_url="", cli_command="lark-cli", with_exa
                     "organization_id": "<organization-id>",
                     "task_type_id": "<task-workitem-type-id>",
                     "task_type_name": "任务",
-                    "default_assignee": {
-                        "name": "负责人姓名",
+                    "token_user": {
+                        "name": "CODEUP_PERSONAL_ACCESS_TOKEN 所属账号姓名",
                         "id": "<yunxiao-user-id>",
                     },
                     "default_sprint": {
@@ -647,6 +647,12 @@ def nested_id(value):
 def selected_yunxiao_settings(args, project):
     defaults = project_yunxiao_defaults(project)
     project_id = args.project_id or (project or {}).get("project_id") or ""
+    token_user = (
+        nested_id(defaults.get("token_user"))
+        or defaults.get("token_user_id")
+        or nested_id(defaults.get("token_owner"))
+        or defaults.get("token_owner_id")
+    )
     post_create_status = getattr(args, "post_create_status", None)
     if getattr(args, "skip_post_create_status", False):
         post_create_status = ""
@@ -656,7 +662,7 @@ def selected_yunxiao_settings(args, project):
         "organization_id": args.organization_id or defaults.get("organization_id") or "",
         "project_id": project_id,
         "workitem_type_id": args.workitem_type_id or defaults.get("task_type_id") or "",
-        "assignee": args.assignee or nested_id(defaults.get("default_assignee")) or "",
+        "assignee": args.assignee or token_user or nested_id(defaults.get("default_assignee")) or "",
         "sprint": args.sprint_id or nested_id(defaults.get("default_sprint")) or "",
         "priority": args.priority_id or nested_id(defaults.get("default_priority")) or "",
         "post_create_status": post_create_status,
@@ -683,7 +689,7 @@ def make_yunxiao_payload(item, spec, settings, index):
         raise ValueError(f"云效任务项 #{index + 1} 缺少 subject/summary/title。")
 
     payload = {
-        "assignedTo": item.get("assignee") or settings["assignee"],
+        "assignedTo": settings["assignee"],
         "description": build_yunxiao_description(item, spec, index),
         "formatType": item.get("format_type") or settings["format_type"],
         "spaceId": item.get("project_id") or settings["project_id"],

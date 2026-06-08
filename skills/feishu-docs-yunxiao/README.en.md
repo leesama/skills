@@ -90,7 +90,7 @@ See `references/config.sample.json` for a complete example.
 - `projects[].local_paths`: Match a Yunxiao project from local repository paths.
 - `projects[].repo_urls` / `repo_patterns`: Match a Yunxiao project from Git remotes.
 - `projects[].requirement_keywords`: Match a Yunxiao project from requirement text.
-- `projects[].yunxiao_defaults`: Yunxiao organization, project, task type, assignee, sprint, priority, and post-create status defaults.
+- `projects[].yunxiao_defaults`: Yunxiao organization, project, task type, token owner user, sprint, priority, and post-create status defaults.
 
 ## Common Commands
 
@@ -133,6 +133,6 @@ Append `--execute` only after the preview is confirmed.
 - No Yunxiao project matched:
   - Check `projects[].local_paths`, `repo_urls`, `repo_patterns`, and `requirement_keywords`.
 - Yunxiao workitems cannot be created:
-  - Check `CODEUP_PERSONAL_ACCESS_TOKEN`, `organization_id`, `project_id`, `task_type_id`, assignee ID, and sprint ID.
+  - Check `CODEUP_PERSONAL_ACCESS_TOKEN`, `organization_id`, `project_id`, `task_type_id`, token owner user ID, and sprint ID.
 - Feishu permission is missing:
   - Run `lark-cli auth status` and follow the CLI prompt to add document-read or task-write scopes.

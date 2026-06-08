@@ -23,8 +23,8 @@
         "organization_id": "<organization-id>",
         "task_type_id": "<task-workitem-type-id>",
         "task_type_name": "任务",
-        "default_assignee": {
-          "name": "负责人姓名",
+        "token_user": {
+          "name": "CODEUP_PERSONAL_ACCESS_TOKEN 所属账号姓名",
           "id": "<yunxiao-user-id>"
         },
         "default_sprint": {

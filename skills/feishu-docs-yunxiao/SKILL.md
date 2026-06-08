@@ -179,6 +179,7 @@ python3 /Users/lee/.codex/skills/feishu-docs-yunxiao/scripts/feishu_yunxiao_task
 - `projects[].sprint_urls`: 常用云效迭代链接，通常指向 `#activeTab=Workitem`。
 - `projects[].workitem_keywords`: 搜索迭代工作项时优先使用的关键词。
 - `projects[].tasklist_id`: 该项目对应的飞书任务清单。
+- `projects[].yunxiao_defaults.token_user`: `CODEUP_PERSONAL_ACCESS_TOKEN` 所属云效账号；云效任务的创建人由 token 决定，负责人 `assignedTo` 也应使用这个账号 ID。
 
 如果项目未命中，打开 `yunxiao_project_list_url`，按需求标题、模块名、仓库名或项目名查云效项目，然后把 `name`、`project_url`、`requirement_keywords`、`repo_urls`、`sprint_urls` 写回配置。
 
@@ -247,7 +248,7 @@ python3 /Users/lee/.codex/skills/feishu-docs-yunxiao/scripts/feishu_yunxiao_task
 - 组织 ID：来自 `organization_id`；缺失时查 `GET /oapi/v1/platform/organizations` 后写回配置。
 - 项目 ID：来自配置 `projects[].project_id`。
 - 任务类型 ID：来自 `task_type_id`；缺失时查 `GET /oapi/v1/projex/organizations/{organizationId}/projects/{projectId}/workitemTypes?category=Task` 后写回配置。
-- 负责人 ID：优先从已有同项目任务或用户配置中获取。
+- 负责人 ID：来自 `CODEUP_PERSONAL_ACCESS_TOKEN` 所属云效账号，优先配置在 `yunxiao_defaults.token_user.id`；旧配置 `default_assignee.id` 仅作为兼容兜底。不要把云效任务负责人配置成与 token 创建人不同的账号。
 - 迭代 ID：优先来自 `default_sprint.id`。
 - 创建后状态：默认更新为 `处理中`；可在 `projects[].yunxiao_defaults.post_create_status` 配置，或创建命令传 `--post-create-status '<状态名或状态ID>'` 覆盖；如需保留云效默认状态，传 `--skip-post-create-status`。
 
@@ -268,7 +269,7 @@ x-yunxiao-token: ${CODEUP_PERSONAL_ACCESS_TOKEN}
 
 ```json
 {
-  "assignedTo": "<负责人云效用户 ID>",
+  "assignedTo": "<CODEUP_PERSONAL_ACCESS_TOKEN 所属云效账号 ID>",
   "description": "任务范围：\n- ...",
   "formatType": "MARKDOWN",
   "parentId": "<父工作项 ID，可选；具体单任务可省略>",
@@ -281,6 +282,8 @@ x-yunxiao-token: ${CODEUP_PERSONAL_ACCESS_TOKEN}
   }
 }
 ```
+
+云效任务的创建人由请求头 `x-yunxiao-token` 决定；本技能中负责人也应与 token 所属账号一致。脚本不会读取 item 里的 `assignee` 覆盖云效任务负责人；命令行 `--assignee` 只用于在配置缺失或过期时手动传入 token 所属账号 ID，不用于指定其他负责人。
 
 父子关系在创建工作项时通过 `parentId` 写入。脚本支持以下参数和 JSON 字段：
 
